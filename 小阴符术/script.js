@@ -295,7 +295,7 @@ function getXingsiName(dizhi, part) {
 
 // 计算六合宫
 function calculateLiuheGong(ke) {
-    return liuheMap[ke] || ke;  // 如果找不到对应的六合，返回原刻
+    return liuheMap[ke] || null;
 }
 
 // 计算机锋门
@@ -395,6 +395,8 @@ function calculateXingsiJifengMen() {
 
 // 获取指定地支的星司
 function getXingsiForDiZhi(dizhi) {
+    console.log(`开始计算地支${dizhi}的星司...`);
+    
     if (!dizhi || dizhi === "无") {
         console.log(`地支为空或"无"，无法获取星司`);
         return null;
@@ -406,14 +408,26 @@ function getXingsiForDiZhi(dizhi) {
         const hour = now.getHours();
         const minute = now.getMinutes();
         
+        console.log(`使用当前时间 ${hour}:${minute} 计算地支${dizhi}的星司`);
+        
         // 计算地支所在的部分
         const part = getBranchPartByTime(dizhi, hour, minute);
+        console.log(`地支${dizhi}在当前时间的部分计算结果: 第${part}份`);
         
         // 获取对应的星司名称
-        const star = getXingsiName(dizhi, part);
+        const key = `${dizhi}-${part}`;
+        console.log(`尝试获取星司，key=${key}`);
+        
+        const star = xingsiNames[key];
         
         if (!star) {
-            console.error(`未能获取到地支${dizhi}第${part}份的星司名称`);
+            console.error(`未找到地支${dizhi}第${part}份的星司名称，key=${key}`);
+            console.log("可用的星司映射:");
+            for (const k in xingsiNames) {
+                if (k.startsWith(dizhi)) {
+                    console.log(`- ${k}: ${xingsiNames[k]}`);
+                }
+            }
             return null;
         }
         
@@ -442,17 +456,19 @@ function updateXingsiInfo() {
         
         // 计算当前时辰的星司
         const branchPart = getBranchPartByTime(currentBranch, currentHour, currentMinute);
-        const branchStar = getXingsiName(currentBranch, branchPart);
+        const branchStarKey = `${currentBranch}-${branchPart}`;
+        const branchStar = xingsiNames[branchStarKey];
         const branchStarNumber = xingsiNumberMap[branchStar];
         
-        console.log(`时辰星司计算: ${currentBranch} 第${branchPart}份 -> ${branchStar}(${branchStarNumber})`);
+        console.log(`时辰星司计算: ${currentBranch} 第${branchPart}份, key=${branchStarKey} -> ${branchStar || '未找到'}(${branchStarNumber || '?'})`);
         
         // 计算当前刻的星司
         // 由于刻只有一份，因此部分始终为1
-        const keStar = getXingsiName(currentKe, 1);
+        const keStarKey = `${currentKe}-1`;
+        const keStar = xingsiNames[keStarKey];
         const keStarNumber = xingsiNumberMap[keStar];
         
-        console.log(`刻星司计算: ${currentKe} 第1份 -> ${keStar}(${keStarNumber})`);
+        console.log(`刻星司计算: ${currentKe} 第1份, key=${keStarKey} -> ${keStar || '未找到'}(${keStarNumber || '?'})`);
         
         // 获取星司详情UI元素
         const branchStarElement = document.getElementById("shi-star");
@@ -463,17 +479,27 @@ function updateXingsiInfo() {
         
         // 更新星司详情UI显示
         if (branchStarElement) {
-            const starNumber = branchStarNumber ? ` (${branchStarNumber})` : '';
-            branchStarElement.textContent = `${branchStar}${starNumber}`;
-            console.log(`已更新时辰星司显示: ${branchStar}${starNumber}`);
+            if (branchStar) {
+                const starNumber = branchStarNumber ? ` (${branchStarNumber})` : '';
+                branchStarElement.textContent = `${branchStar}${starNumber}`;
+                console.log(`已更新时辰星司显示: ${branchStar}${starNumber}`);
+            } else {
+                console.error(`未找到时辰${currentBranch}第${branchPart}份的星司，key=${branchStarKey}`);
+                branchStarElement.textContent = "未知星司";
+            }
         } else {
             console.error("未找到时星司元素");
         }
         
         if (keStarElement) {
-            const starNumber = keStarNumber ? ` (${keStarNumber})` : '';
-            keStarElement.textContent = `${keStar}${starNumber}`;
-            console.log(`已更新刻星司显示: ${keStar}${starNumber}`);
+            if (keStar) {
+                const starNumber = keStarNumber ? ` (${keStarNumber})` : '';
+                keStarElement.textContent = `${keStar}${starNumber}`;
+                console.log(`已更新刻星司显示: ${keStar}${starNumber}`);
+            } else {
+                console.error(`未找到刻${currentKe}的星司，key=${keStarKey}`);
+                keStarElement.textContent = "未知星司";
+            }
         } else {
             console.error("未找到刻星司元素");
         }
@@ -501,151 +527,148 @@ function getTimeBranchByHourMinute(hour, minute) {
     return "子";
 }
 
-// 根据指定时间获取时辰分段
+// 根据时间计算地支的份数
 function getBranchPartByTime(branch, hour, minute) {
     try {
         console.log(`计算地支${branch}在时间${hour}:${minute}的部分...`);
         
-        // 获取地支对应的总份数
+        // 获取总份数
         const totalParts = dizhiParts[branch] || 1;
         console.log(`地支${branch}共有${totalParts}份`);
         
-        // 处理特殊情况：子时跨越两天，需要特别处理
-        if (branch === "子") {
-            // 子时: 23:00-01:00，跨越两天
-            const totalMinutes = 120; // 子时总共120分钟
-            let minutesPassedInZi;
-            
-            if (hour === 23) {
-                // 23:00-23:59，子时前半段
-                minutesPassedInZi = minute;
-            } else if (hour === 0) {
-                // 00:00-00:59，子时中段
-                minutesPassedInZi = 60 + minute;
-            } else {
-                // 01:00，子时末尾（虽然01:00通常已经是丑时的开始，但可能有边界情况）
-                minutesPassedInZi = 120;
-            }
-            
-            // 计算所在的部分
-            const partDuration = totalMinutes / totalParts;
-            let currentPart = Math.floor(minutesPassedInZi / partDuration) + 1;
-            
-            // 确保部分在有效范围内
-            if (currentPart > totalParts) currentPart = totalParts;
-            if (currentPart < 1) currentPart = 1;
-            
-            console.log(`子时特殊处理: ${hour}:${minute} -> 第${currentPart}/${totalParts}份`);
-            return currentPart;
+        // 如果只有1份，直接返回
+        if (totalParts === 1) {
+            console.log(`地支${branch}只有1份，直接返回第1份`);
+            return 1;
         }
         
-        // 其他地支的情况（每个时辰2小时）
-        const branchHourMap = {
-            "丑": 1, "寅": 3, "卯": 5, "辰": 7, "巳": 9, 
-            "午": 11, "未": 13, "申": 15, "酉": 17, "戌": 19, "亥": 21
-        };
+        // 将24小时转换为分钟
+        const totalMinutesInDay = 24 * 60; // 1440分钟
         
-        const startHour = branchHourMap[branch];
-        if (startHour === undefined) {
-            console.error(`未知的地支: ${branch}`);
-            return 1; // 默认返回第1份
-        }
+        // 计算当前时间在一天中的分钟数
+        const currentTimeInMinutes = hour * 60 + minute;
+        console.log(`当前时间 ${hour}:${minute} 在一天中的分钟数: ${currentTimeInMinutes}`);
         
-        // 计算当前时间在该地支中经过的分钟数
-        const totalMinutes = 120; // 每个时辰2小时
-        let minutesPassed;
+        // 计算每份的分钟数
+        const minutesPerPart = totalMinutesInDay / totalParts;
+        console.log(`24小时分为${totalParts}份，每份${minutesPerPart}分钟`);
         
-        if (hour === startHour) {
-            // 在时辰的第一个小时
-            minutesPassed = minute;
-        } else if (hour === startHour + 1) {
-            // 在时辰的第二个小时
-            minutesPassed = 60 + minute;
-        } else {
-            console.error(`时间${hour}:${minute}不在地支${branch}范围内`);
-            return 1; // 默认返回第1份
-        }
+        // 计算当前时间属于哪一份
+        const currentPart = Math.floor(currentTimeInMinutes / minutesPerPart) + 1;
         
-        // 计算所在的部分
-        const partDuration = totalMinutes / totalParts;
-        let currentPart = Math.floor(minutesPassed / partDuration) + 1;
+        // 确保返回值在有效范围内
+        const finalPart = Math.min(Math.max(currentPart, 1), totalParts);
         
-        // 确保部分在有效范围内
-        if (currentPart > totalParts) currentPart = totalParts;
-        if (currentPart < 1) currentPart = 1;
+        // 计算当前份的时间范围
+        const startMinutes = (finalPart - 1) * minutesPerPart;
+        const endMinutes = finalPart * minutesPerPart;
         
-        console.log(`计算结果: 地支${branch}在时间${hour}:${minute} -> 第${currentPart}/${totalParts}份`);
-        return currentPart;
+        // 转换为小时:分钟格式
+        const startHour = Math.floor(startMinutes / 60);
+        const startMinute = Math.floor(startMinutes % 60);
+        const endHour = Math.floor(endMinutes / 60);
+        const endMinute = Math.floor(endMinutes % 60);
+        
+        const startTimeStr = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+        const endTimeStr = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+        
+        console.log(`地支${branch}在时间${hour}:${minute}属于第${finalPart}/${totalParts}份，时间范围: ${startTimeStr}-${endTimeStr}`);
+        
+        return finalPart;
     } catch (error) {
         console.error(`计算地支${branch}部分时出错:`, error);
-        return 1; // 出错时默认返回第1份
+        return 1;
     }
 }
 
-// 验证特定时间点的星司计算
+// 验证特定时间的星司计算
 function verifySpecificTimes() {
-    // 验证未时的各个分段
-    let testTimes = [
-        {hour: 13, minute: 10, expected: 1},  // 未时第1份
-        {hour: 13, minute: 40, expected: 2},  // 未时第2份
-        {hour: 14, minute: 24, expected: 2},  // 未时第2份 - 您的案例
-        {hour: 14, minute: 40, expected: 3},  // 未时第3份
-    ];
+    console.log("验证特定时间的星司计算...");
     
-    console.log("===== 验证未时分段 =====");
-    testTimes.forEach(test => {
-        const branch = "未";
-        const part = getBranchPartByTime(branch, test.hour, test.minute);
-        const star = getXingsiName(branch, part);
-        console.log(`时间 ${test.hour}:${test.minute.toString().padStart(2, '0')} - 计算份数: ${part}, 期望份数: ${test.expected}, 星司: ${star}`);
-    });
-    
-    // 验证当前时间
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentBranch = getCurrentTimeBranch();
-    const currentPart = getBranchPartByTime(currentBranch, currentHour, currentMinute);
-    const currentStar = getXingsiName(currentBranch, currentPart);
-    
-    console.log("===== 当前时间分段 =====");
-    console.log(`当前时间: ${currentHour}:${currentMinute.toString().padStart(2, '0')}`);
-    console.log(`时辰: ${currentBranch}, 计算份数: ${currentPart}, 星司: ${currentStar}`);
-    
-    // 计算每个时辰各份对应的分钟范围
-    console.log("===== 时辰分段时间范围 =====");
-    Object.keys(dizhiParts).forEach(branch => {
-        const parts = dizhiParts[branch];
-        if (parts === 1) {
-            console.log(`${branch}时(1份): ${branch}-1 -> ${getXingsiName(branch, 1)}`);
-            return;
-        }
+    try {
+        // 验证子时的星司计算
+        const testTimes = [
+            { branch: "子", hour: 23, minute: 30 },
+            { branch: "子", hour: 0, minute: 30 },
+            { branch: "丑", hour: 1, minute: 30 },
+            { branch: "寅", hour: 3, minute: 30 },
+            { branch: "卯", hour: 5, minute: 30 },
+            { branch: "辰", hour: 7, minute: 30 },
+            { branch: "巳", hour: 9, minute: 30 },
+            { branch: "午", hour: 11, minute: 30 },
+            { branch: "未", hour: 13, minute: 30 },
+            { branch: "申", hour: 15, minute: 30 },
+            { branch: "酉", hour: 17, minute: 30 },
+            { branch: "戌", hour: 19, minute: 30 },
+            { branch: "亥", hour: 21, minute: 30 }
+        ];
         
-        const startHour = getStartHourForBranch(branch);
-        const totalMinutes = 120; // 时辰总分钟数
-        const minutesPerPart = totalMinutes / parts;
+        testTimes.forEach(({ branch, hour, minute }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`${branch}时 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 -> ${star || '未知'}`);
+        });
         
-        console.log(`${branch}时(${parts}份):`);
-        for (let i = 1; i <= parts; i++) {
-            const partStartMinute = Math.floor((i - 1) * minutesPerPart);
-            const partEndMinute = Math.floor(i * minutesPerPart) - 1;
-            
-            // 计算开始时间
-            const startHourOffset = Math.floor(partStartMinute / 60);
-            const startMinuteDisplay = partStartMinute % 60;
-            const startTimeHour = (startHour + startHourOffset) % 24;
-            
-            // 计算结束时间
-            const endHourOffset = Math.floor(partEndMinute / 60);
-            const endMinuteDisplay = partEndMinute % 60;
-            const endTimeHour = (startHour + endHourOffset) % 24;
-            
-            const formatTime = (h, m) => `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-            const timeRange = `${formatTime(startTimeHour, startMinuteDisplay)} - ${formatTime(endTimeHour, endMinuteDisplay)}`;
-            
-            console.log(`  第${i}份: ${timeRange} -> ${branch}-${i} -> ${getXingsiName(branch, i)}`);
-        }
-    });
+        // 验证当前时辰的星司计算
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentBranch = getCurrentTimeBranch();
+        const currentPart = getBranchPartByTime(currentBranch, currentHour, currentMinute);
+        const currentStarKey = `${currentBranch}-${currentPart}`;
+        const currentStar = xingsiNames[currentStarKey];
+        
+        console.log(`当前时间: ${currentHour}:${currentMinute.toString().padStart(2, '0')}`);
+        console.log(`当前时辰: ${currentBranch}, 第${currentPart}份 -> ${currentStar || '未知'}`);
+        
+        // 验证每个地支的第一份星司
+        console.log("\n每个地支的星司划分:");
+        dizhi.forEach(branch => {
+            const parts = dizhiParts[branch] || 1;
+            console.log(`${branch}时(${parts}份):`);
+            if (parts === 1) {
+                const starKey = `${branch}-1`;
+                console.log(`${branch}时(1份): ${starKey} -> ${xingsiNames[starKey] || '未知'}`);
+            } else {
+                // 计算每份的时间范围
+                const branchHourMap = {
+                    "子": 23, // 特殊情况，跨天
+                    "丑": 1, "寅": 3, "卯": 5, "辰": 7, "巳": 9, 
+                    "午": 11, "未": 13, "申": 15, "酉": 17, "戌": 19, "亥": 21
+                };
+                
+                const startHour = branchHourMap[branch];
+                const totalMinutes = 120; // 每个时辰2小时
+                const minutesPerPart = Math.floor(totalMinutes / parts);
+                
+                for (let i = 1; i <= parts; i++) {
+                    const startMinute = (i - 1) * minutesPerPart;
+                    const endMinute = i * minutesPerPart - 1;
+                    
+                    let startTimeH = startHour + Math.floor(startMinute / 60);
+                    let startTimeM = startMinute % 60;
+                    let endTimeH = startHour + Math.floor(endMinute / 60);
+                    let endTimeM = endMinute % 60;
+                    
+                    // 处理子时跨天的特殊情况
+                    if (branch === "子") {
+                        if (startTimeH >= 24) startTimeH -= 24;
+                        if (endTimeH >= 24) endTimeH -= 24;
+                    }
+                    
+                    const formatTime = (h, m) => `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                    const timeRange = `${formatTime(startTimeH, startTimeM)}-${formatTime(endTimeH, endTimeM)}`;
+                    const starKey = `${branch}-${i}`;
+                    console.log(`  第${i}份: ${timeRange} -> ${starKey} -> ${xingsiNames[starKey] || '未知'}`);
+                }
+            }
+        });
+        
+        console.log("验证完成");
+    } catch (error) {
+        console.error("验证特定时间的星司计算时出错:", error);
+    }
 }
 
 // 计算天盘值（根据刻柱.txt规则）
@@ -822,40 +845,71 @@ function updateXingsiJifengMen(jifengMen) {
             return;
         }
         
+        // 获取当前时间
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        console.log(`使用当前时间 ${hour}:${minute} 计算机锋门星司`);
+        
         // 获取天盘星司
         let tianpanStar = null;
         let tianpanStarNumber = null;
         
         if (jifengMen.tianpan && jifengMen.tianpan !== "无") {
-            const tianpanXingsi = getXingsiForDiZhi(jifengMen.tianpan);
-            if (tianpanXingsi && tianpanXingsi.star) {
-                tianpanStar = tianpanXingsi.star;
+            // 获取天盘地支对应的分段
+            const tianpanPart = getBranchPartByTime(jifengMen.tianpan, hour, minute);
+            const tianpanKey = `${jifengMen.tianpan}-${tianpanPart}`;
+            tianpanStar = xingsiNames[tianpanKey];
+            
+            console.log(`机锋门天盘${jifengMen.tianpan}的分段计算: 第${tianpanPart}份, key=${tianpanKey}`);
+            
+            if (tianpanStar) {
                 tianpanStarNumber = xingsiNumberMap[tianpanStar];
-                console.log(`天盘星司: ${tianpanStar}(${tianpanStarNumber})`);
+                console.log(`天盘星司: ${jifengMen.tianpan} 第${tianpanPart}份 -> ${tianpanStar}(${tianpanStarNumber})`);
+            } else {
+                console.error(`未找到天盘${jifengMen.tianpan}第${tianpanPart}份的星司名称，key=${tianpanKey}`);
+                console.log("可用的星司映射:");
+                Object.keys(xingsiNames).forEach(key => {
+                    if (key.startsWith(jifengMen.tianpan)) {
+                        console.log(`- ${key}: ${xingsiNames[key]}`);
+                    }
+                });
             }
         }
         
         // 获取地盘星司
-        const dipanXingsi = getXingsiForDiZhi(jifengMen.dipan);
+        // 计算地盘地支对应的分段
+        const dipanPart = getBranchPartByTime(jifengMen.dipan, hour, minute);
+        const dipanKey = `${jifengMen.dipan}-${dipanPart}`;
+        const dipanStar = xingsiNames[dipanKey];
         
-        if (!dipanXingsi || !dipanXingsi.star) {
-            console.error(`无法获取地盘${jifengMen.dipan}的星司`);
+        console.log(`机锋门地盘${jifengMen.dipan}的分段计算: 第${dipanPart}份, key=${dipanKey}`);
+        
+        if (!dipanStar) {
+            console.error(`未找到地盘${jifengMen.dipan}第${dipanPart}份的星司名称，key=${dipanKey}`);
+            console.log("可用的星司映射:");
+            Object.keys(xingsiNames).forEach(key => {
+                if (key.startsWith(jifengMen.dipan)) {
+                    console.log(`- ${key}: ${xingsiNames[key]}`);
+                }
+            });
             xingsiResultElement.textContent = "无法计算";
             xingsiResultNumbersElement.textContent = "无法计算";
             return;
         }
         
-        const dipanStar = dipanXingsi.star;
         const dipanStarNumber = xingsiNumberMap[dipanStar];
-        console.log(`地盘星司: ${dipanStar}(${dipanStarNumber})`);
+        console.log(`地盘星司: ${jifengMen.dipan} 第${dipanPart}份 -> ${dipanStar}(${dipanStarNumber})`);
         
         // 更新星司结果显示
         if (tianpanStar) {
             xingsiResultElement.textContent = `${tianpanStar} + ${dipanStar}`;
             xingsiResultNumbersElement.textContent = `${tianpanStarNumber || "?"} + ${dipanStarNumber || "?"}`;
+            console.log(`更新星司机锋门结果: ${tianpanStar} + ${dipanStar}`);
         } else {
             xingsiResultElement.textContent = dipanStar;
             xingsiResultNumbersElement.textContent = dipanStarNumber || "?";
+            console.log(`更新星司机锋门结果(仅地盘): ${dipanStar}`);
         }
         
         // 显示星司卡片
@@ -870,12 +924,12 @@ function updateXingsiJifengMen(jifengMen) {
     }
 }
 
-// 计算推字结果
+// 计算推字
 function calculateTuizi() {
     console.log("开始计算推字");
     
     try {
-        // 获取机锋门的天盘星司和地盘星司
+        // 获取机锋门
         const jifengResult = calculateJifengMen();
         if (!jifengResult) {
             console.error("无法计算机锋门，无法推字");
@@ -884,37 +938,67 @@ function calculateTuizi() {
         
         // 获取当前时间
         const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        console.log(`使用当前时间 ${hour}:${minute} 计算推字`);
         
-        // 获取当前的天盘和地盘
+        // 获取机锋门天地盘
         const tianpan = jifengResult.tianpan;
         const dizhi = jifengResult.dipan;
-        
         console.log(`机锋门天地盘: 天盘=${tianpan}, 地盘=${dizhi}`);
         
-        // 如果天盘是"无"，则无法计算推字
+        // 如果天盘为"无"，无法计算推字
         if (tianpan === "无") {
-            console.warn("天盘为'无'，无法计算推字");
+            console.warn("天盘为'无'，无法计算完整推字");
+            // 仍然返回地盘星司信息
+            const dizhiPart = getBranchPartByTime(dizhi, hour, minute);
+            console.log(`地盘${dizhi}分段计算: 第${dizhiPart}份`);
+            const dizhiXingsiName = xingsiNames[`${dizhi}-${dizhiPart}`];
+            console.log(`地盘星司: ${dizhi} 第${dizhiPart}份 -> ${dizhiXingsiName || '未找到'}`);
+            
             return {
                 tianpanXingsi: null,
                 tianpanNumber: null,
-                dizhiXingsi: getXingsiForDiZhi(dizhi).star,
-                dizhiNumber: xingsiNumberMap[getXingsiForDiZhi(dizhi).star],
-                tuiziIndex: null,  // 不进行数字计算
+                dizhiXingsi: dizhiXingsiName,
+                dizhiNumber: dizhiXingsiName ? xingsiNumberMap[dizhiXingsiName] : null,
+                tuiziIndex: null,
                 tuiziList: []
             };
         }
         
-        // 获取天盘对应的星司和推字列表
-        const tianpanXingsi = getXingsiForDiZhi(tianpan);
-        const tianpanXingsiName = tianpanXingsi.star;
+        // 计算天盘星司
+        const tianpanPart = getBranchPartByTime(tianpan, hour, minute);
+        console.log(`天盘${tianpan}分段计算: 第${tianpanPart}份`);
+        const tianpanXingsiName = xingsiNames[`${tianpan}-${tianpanPart}`];
+        if (!tianpanXingsiName) {
+            console.error(`未找到天盘${tianpan}第${tianpanPart}份的星司名称`);
+            console.log("可用的星司映射:");
+            Object.keys(xingsiNames).forEach(key => {
+                if (key.startsWith(tianpan)) {
+                    console.log(`- ${key}: ${xingsiNames[key]}`);
+                }
+            });
+            return null;
+        }
         const tianpanNumber = xingsiNumberMap[tianpanXingsiName];
+        console.log(`天盘星司: ${tianpan} 第${tianpanPart}份 -> ${tianpanXingsiName}(${tianpanNumber || '?'})`);
         
-        // 获取地盘对应的星司和数字
-        const dizhiXingsi = getXingsiForDiZhi(dizhi);
-        const dizhiXingsiName = dizhiXingsi.star;
+        // 计算地盘星司
+        const dizhiPart = getBranchPartByTime(dizhi, hour, minute);
+        console.log(`地盘${dizhi}分段计算: 第${dizhiPart}份`);
+        const dizhiXingsiName = xingsiNames[`${dizhi}-${dizhiPart}`];
+        if (!dizhiXingsiName) {
+            console.error(`未找到地盘${dizhi}第${dizhiPart}份的星司名称`);
+            console.log("可用的星司映射:");
+            Object.keys(xingsiNames).forEach(key => {
+                if (key.startsWith(dizhi)) {
+                    console.log(`- ${key}: ${xingsiNames[key]}`);
+                }
+            });
+            return null;
+        }
         const dizhiNumber = xingsiNumberMap[dizhiXingsiName];
+        console.log(`地盘星司: ${dizhi} 第${dizhiPart}份 -> ${dizhiXingsiName}(${dizhiNumber || '?'})`);
         
         // 获取天盘星司对应的推字列表
         const tuiziList = xingsiTuiziMap[tianpanXingsiName] || [];
@@ -923,33 +1007,33 @@ function calculateTuizi() {
             return null;
         }
         
-        // 检查是否获取到星司数字
+        // 确保地盘星司数字有效
         if (!dizhiNumber) {
-            console.error(`未找到地盘星司对应的数字: ${dizhiXingsiName}`);
+            console.error(`未找到地盘星司${dizhiXingsiName}对应的数字`);
             return null;
         }
         
         console.log(`推字计算: 天盘=${tianpan}(星司=${tianpanXingsiName}, 数字=${tianpanNumber}), 地盘=${dizhi}(星司=${dizhiXingsiName}, 数字=${dizhiNumber})`);
         
-        // 检查是他占还是自占
+        // 根据他占/自占确定推字方向
         const isTaZhan = document.getElementById('taZhan').checked;
-        
-        // 计算推字索引：使用地盘星司的数字从天盘星司的推字列表中找
-        // 他占顺数，自占逆数
         let tuiziIndex;
+        
         if (isTaZhan) {
-            // 他占：顺数 - 从1开始计数，所以-1
-            tuiziIndex = (dizhiNumber - 1) % tuiziList.length;
+            // 他占顺数
+            tuiziIndex = (parseInt(dizhiNumber) - 1) % tuiziList.length;
             console.log(`他占顺数: 地盘星司数${dizhiNumber} -> 在天盘星司(${tianpanXingsiName})推字列表中索引 ${tuiziIndex}`);
         } else {
-            // 自占：逆数
-            tuiziIndex = (tuiziList.length - (dizhiNumber % tuiziList.length)) % tuiziList.length;
-            if (dizhiNumber % tuiziList.length === 0) {
-                tuiziIndex = 0; // 如果能整除，应该是第一个字
+            // 自占逆数
+            const num = parseInt(dizhiNumber);
+            tuiziIndex = (tuiziList.length - (num % tuiziList.length)) % tuiziList.length;
+            if (num % tuiziList.length === 0) {
+                tuiziIndex = 0;
             }
             console.log(`自占逆数: 地盘星司数${dizhiNumber} -> 在天盘星司(${tianpanXingsiName})推字列表中索引 ${tuiziIndex}`);
         }
         
+        // 返回推字结果
         return {
             tianpanXingsi: tianpanXingsiName,
             tianpanNumber: tianpanNumber,
@@ -1064,6 +1148,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 确保星司数据已初始化
         initXingsiData();
         
+        // 测试星司分段计算
+        testXingsiPartCalculation();
+        
         // 初始化下拉框
         initDropdowns();
         
@@ -1110,6 +1197,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        // 添加调试按钮
+        const debugBtn = document.createElement('button');
+        debugBtn.textContent = '调试星司计算';
+        debugBtn.className = 'btn btn-warning mt-2';
+        debugBtn.style.display = 'block';
+        debugBtn.style.margin = '10px auto';
+        debugBtn.addEventListener('click', function() {
+            debugXingsiCalculation();
+        });
+        
+        // 添加分段测试按钮
+        const testPartsBtn = document.createElement('button');
+        testPartsBtn.textContent = '测试所有地支分段';
+        testPartsBtn.className = 'btn btn-danger mt-2';
+        testPartsBtn.style.display = 'block';
+        testPartsBtn.style.margin = '10px auto';
+        testPartsBtn.addEventListener('click', function() {
+            testAllBranchParts();
+        });
+        
+        // 将按钮添加到页面
+        const container = document.querySelector('.container');
+        if (container) {
+            container.appendChild(debugBtn);
+            container.appendChild(testPartsBtn);
+        }
+        
         // 定时检查时间变化
         setInterval(() => {
             const now = new Date();
@@ -1134,54 +1248,50 @@ function initXingsiData() {
     console.log("初始化星司数据...");
     
     try {
-        // 确保星司名称映射已初始化
-        if (!xingsiNames || Object.keys(xingsiNames).length === 0) {
-            console.error("星司名称映射未初始化，使用硬编码数据");
-            
-            // 使用硬编码的星司名称数据作为备份
-            xingsiNames = {
-                "子-1": "天渊", "子-2": "天桴",
-                "丑-1": "天厨", "丑-2": "天垒",
-                "寅-1": "天厩", "寅-2": "天罇", "寅-3": "天鸡", "寅-4": "天园", "寅-5": "天溷",
-                "卯-1": "天庾", "卯-2": "天仓", "卯-3": "天囷", "卯-4": "天廪",
-                "辰-1": "天谗", "辰-2": "天苑", "辰-3": "天阴", "辰-4": "天街", 
-                "辰-5": "天潢", "辰-6": "天高", "辰-7": "天船",
-                "巳-1": "天关",
-                "午-1": "天社", "午-2": "天纪", "午-3": "天狼",
-                "未-1": "天庙", "未-2": "天稷", "未-3": "天相",
-                "申-1": "天枪",
-                "酉-1": "天门", "酉-2": "天田",
-                "戌-1": "天江", "戌-2": "天辐",
-                "亥-1": "天籥", "亥-2": "天井"
-            };
-        }
+        // 硬编码星司名称映射，确保数据正确
+        xingsiNames = {
+            "子-1": "天渊", "子-2": "天桴",
+            "丑-1": "天厨", "丑-2": "天垒",
+            "寅-1": "天厩", "寅-2": "天罇", "寅-3": "天鸡", "寅-4": "天园", "寅-5": "天溷",
+            "卯-1": "天庾", "卯-2": "天仓", "卯-3": "天囷", "卯-4": "天廪",
+            "辰-1": "天谗", "辰-2": "天苑", "辰-3": "天阴", "辰-4": "天街", 
+            "辰-5": "天潢", "辰-6": "天高", "辰-7": "天船",
+            "巳-1": "天关",
+            "午-1": "天社", "午-2": "天纪", "午-3": "天狼",
+            "未-1": "天庙", "未-2": "天稷", "未-3": "天相",
+            "申-1": "天枪",
+            "酉-1": "天门", "酉-2": "天田",
+            "戌-1": "天江", "戌-2": "天辐",
+            "亥-1": "天籥", "亥-2": "天井"
+        };
         
-        // 确保星司数字映射已初始化
-        if (!xingsiNumberMap || Object.keys(xingsiNumberMap).length === 0) {
-            console.error("星司数字映射未初始化，使用硬编码数据");
-            
-            // 使用硬编码的星司数字映射数据作为备份
-            xingsiNumberMap = {
-                "天渊": "1", "天桴": "2", "天厨": "3", "天垒": "4", 
-                "天厩": "5", "天罇": "6", "天鸡": "7", "天园": "8", "天溷": "9",
-                "天庾": "10", "天仓": "11", "天囷": "12", "天廪": "13",
-                "天谗": "14", "天苑": "15", "天阴": "16", "天街": "17", 
-                "天潢": "18", "天高": "19", "天船": "20",
-                "天关": "21",
-                "天社": "22", "天纪": "23", "天狼": "24",
-                "天庙": "25", "天稷": "26", "天相": "27",
-                "天枪": "28",
-                "天门": "29", "天田": "30",
-                "天江": "31", "天辐": "32",
-                "天籥": "33", "天井": "34"
-            };
-        }
+        // 硬编码星司数字映射，确保数据正确
+        xingsiNumberMap = {
+            "天渊": "1", "天桴": "2", "天厨": "3", "天垒": "4", 
+            "天厩": "5", "天罇": "6", "天鸡": "7", "天园": "8", "天溷": "9",
+            "天庾": "10", "天仓": "11", "天囷": "12", "天廪": "13",
+            "天谗": "14", "天苑": "15", "天阴": "16", "天街": "17", 
+            "天潢": "18", "天高": "19", "天船": "20",
+            "天关": "21",
+            "天社": "22", "天纪": "23", "天狼": "24",
+            "天庙": "25", "天稷": "26", "天相": "27",
+            "天枪": "28",
+            "天门": "29", "天田": "30",
+            "天江": "31", "天辐": "32",
+            "天籥": "33", "天井": "34"
+        };
         
         // 验证几个关键映射
         console.log(`验证星司映射: 子-1 -> ${xingsiNames["子-1"] || "未找到"}`);
         console.log(`验证星司数字: 天渊 -> ${xingsiNumberMap["天渊"] || "未找到"}`);
-        console.log(`验证星司映射: 巳-1 -> ${xingsiNames["巳-1"] || "未找到"}`);
-        console.log(`验证星司数字: 天关 -> ${xingsiNumberMap["天关"] || "未找到"}`);
+        console.log(`验证星司映射: 未-2 -> ${xingsiNames["未-2"] || "未找到"}`);
+        console.log(`验证星司数字: 天稷 -> ${xingsiNumberMap["天稷"] || "未找到"}`);
+        
+        // 输出所有星司映射，便于调试
+        console.log("所有星司映射:");
+        Object.keys(xingsiNames).sort().forEach(key => {
+            console.log(`${key}: ${xingsiNames[key]}`);
+        });
         
         console.log("星司数据初始化完成");
     } catch (error) {
@@ -1191,18 +1301,18 @@ function initXingsiData() {
 
 // 地盘位置定义
 const dipanOrder = [
-    { row: 1, col: 1, name: "巳" },
-    { row: 1, col: 2, name: "午" },
-    { row: 1, col: 3, name: "未" },
-    { row: 1, col: 4, name: "申" },
-    { row: 2, col: 1, name: "辰" },
-    { row: 2, col: 4, name: "酉" },
-    { row: 3, col: 1, name: "卯" },
-    { row: 3, col: 4, name: "戌" },
-    { row: 4, col: 1, name: "寅" },
-    { row: 4, col: 2, name: "丑" },
-    { row: 4, col: 3, name: "子" },
-    { row: 4, col: 4, name: "亥" }
+    { row: 1, col: 1, name: '巳' },
+    { row: 1, col: 2, name: '午' },
+    { row: 1, col: 3, name: '未' },
+    { row: 1, col: 4, name: '申' },
+    { row: 2, col: 1, name: '辰' },
+    { row: 2, col: 4, name: '酉' },
+    { row: 3, col: 1, name: '卯' },
+    { row: 3, col: 4, name: '戌' },
+    { row: 4, col: 1, name: '寅' },
+    { row: 4, col: 2, name: '丑' },
+    { row: 4, col: 3, name: '子' },
+    { row: 4, col: 4, name: '亥' }
 ];
 
 // 需要填充的单元格ID列表
@@ -1390,5 +1500,383 @@ function initDropdowns() {
         }
     } catch (error) {
         console.error("初始化下拉框时出错:", error);
+    }
+}
+
+// 测试星司分段计算
+function testXingsiPartCalculation() {
+    console.log("===== 测试星司分段计算 =====");
+    
+    // 测试未时的分段计算
+    const testUnweiFenCalculation = () => {
+        const branch = "未";
+        const totalParts = dizhiParts[branch] || 1;
+        const totalMinutes = 120; // 2小时
+        const partDuration = Math.floor(totalMinutes / totalParts);
+        
+        console.log(`测试"${branch}"时分段计算，共${totalParts}份，每份${partDuration}分钟`);
+        
+        // 计算每份的具体分钟范围
+        for (let i = 1; i <= totalParts; i++) {
+            const startMin = (i - 1) * partDuration;
+            const endMin = i * partDuration - 1;
+            console.log(`第${i}份范围: ${startMin}-${endMin}分钟`);
+        }
+        
+        const testTimes = [
+            { hour: 13, minute: 10, expected: 1 },  // 未时第1份
+            { hour: 13, minute: 30, expected: 1 },  // 未时第1份
+            { hour: 13, minute: 50, expected: 2 },  // 未时第2份
+            { hour: 14, minute: 10, expected: 2 },  // 未时第2份
+            { hour: 14, minute: 30, expected: 3 },  // 未时第3份
+            { hour: 14, minute: 50, expected: 3 }   // 未时第3份
+        ];
+        
+        testTimes.forEach(({ hour, minute, expected }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`时间 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 (期望:第${expected}份) -> ${star || '未知'}`);
+        });
+    };
+    
+    // 测试辰时的分段计算
+    const testChenFenCalculation = () => {
+        const branch = "辰";
+        const totalParts = dizhiParts[branch] || 1;
+        const totalMinutes = 120; // 2小时
+        const partDuration = Math.floor(totalMinutes / totalParts);
+        
+        console.log(`\n测试"${branch}"时分段计算，共${totalParts}份，每份约${Math.floor(totalMinutes/totalParts)}分钟`);
+        
+        const testTimes = [
+            { hour: 7, minute: 5, expected: 1 },    // 辰时第1份
+            { hour: 7, minute: 20, expected: 2 },   // 辰时第2份
+            { hour: 7, minute: 40, expected: 3 },   // 辰时第3份
+            { hour: 7, minute: 55, expected: 4 },   // 辰时第4份
+            { hour: 8, minute: 10, expected: 5 },   // 辰时第5份
+            { hour: 8, minute: 30, expected: 6 },   // 辰时第6份
+            { hour: 8, minute: 50, expected: 7 }    // 辰时第7份
+        ];
+        
+        testTimes.forEach(({ hour, minute, expected }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`时间 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 (期望:第${expected}份) -> ${star || '未知'}`);
+        });
+    };
+    
+    // 测试子时的分段计算
+    const testZiFenCalculation = () => {
+        const branch = "子";
+        const totalParts = dizhiParts[branch] || 1;
+        const totalMinutes = 120; // 2小时
+        const partDuration = Math.floor(totalMinutes / totalParts);
+        
+        console.log(`\n测试"${branch}"时分段计算，共${totalParts}份，每份${partDuration}分钟`);
+        
+        const testTimes = [
+            { hour: 23, minute: 15, expected: 1 },  // 子时第1份
+            { hour: 23, minute: 45, expected: 1 },  // 子时第1份
+            { hour: 0, minute: 15, expected: 2 },   // 子时第2份
+            { hour: 0, minute: 45, expected: 2 }    // 子时第2份
+        ];
+        
+        testTimes.forEach(({ hour, minute, expected }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`时间 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 (期望:第${expected}份) -> ${star || '未知'}`);
+        });
+    };
+    
+    // 测试寅时的分段计算
+    const testYinFenCalculation = () => {
+        const branch = "寅";
+        const totalParts = dizhiParts[branch] || 1;
+        
+        console.log(`\n测试"${branch}"时分段计算，共${totalParts}份`);
+        
+        const testTimes = [
+            { hour: 3, minute: 10, expected: 1 },   // 寅时第1份
+            { hour: 3, minute: 30, expected: 2 },   // 寅时第2份
+            { hour: 3, minute: 55, expected: 3 },   // 寅时第3份
+            { hour: 4, minute: 20, expected: 4 },   // 寅时第4份
+            { hour: 4, minute: 45, expected: 5 }    // 寅时第5份
+        ];
+        
+        testTimes.forEach(({ hour, minute, expected }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`时间 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 (期望:第${expected}份) -> ${star || '未知'}`);
+        });
+    };
+    
+    // 测试卯时的分段计算
+    const testMaoFenCalculation = () => {
+        const branch = "卯";
+        const totalParts = dizhiParts[branch] || 1;
+        
+        console.log(`\n测试"${branch}"时分段计算，共${totalParts}份`);
+        
+        const testTimes = [
+            { hour: 5, minute: 15, expected: 1 },   // 卯时第1份
+            { hour: 5, minute: 45, expected: 2 },   // 卯时第2份
+            { hour: 6, minute: 15, expected: 3 },   // 卯时第3份
+            { hour: 6, minute: 45, expected: 4 }    // 卯时第4份
+        ];
+        
+        testTimes.forEach(({ hour, minute, expected }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`时间 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 (期望:第${expected}份) -> ${star || '未知'}`);
+        });
+    };
+    
+    // 测试午时的分段计算
+    const testWuFenCalculation = () => {
+        const branch = "午";
+        const totalParts = dizhiParts[branch] || 1;
+        
+        console.log(`\n测试"${branch}"时分段计算，共${totalParts}份`);
+        
+        const testTimes = [
+            { hour: 11, minute: 15, expected: 1 },  // 午时第1份
+            { hour: 11, minute: 50, expected: 2 },  // 午时第2份
+            { hour: 12, minute: 30, expected: 3 }   // 午时第3份
+        ];
+        
+        testTimes.forEach(({ hour, minute, expected }) => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`时间 ${hour}:${minute.toString().padStart(2, '0')} -> 第${part}份 (期望:第${expected}份) -> ${star || '未知'}`);
+        });
+    };
+    
+    // 执行测试
+    testUnweiFenCalculation();
+    testChenFenCalculation();
+    testZiFenCalculation();
+    testYinFenCalculation();
+    testMaoFenCalculation();
+    testWuFenCalculation();
+    
+    console.log("===== 测试完成 =====");
+}
+
+// 调试星司计算
+function debugXingsiCalculation() {
+    console.log("===== 调试星司计算 =====");
+    
+    try {
+        // 获取当前时间
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        
+        // 获取当前时辰和刻
+        const currentBranch = getCurrentTimeBranch();
+        const currentKe = getCurrentKe();
+        
+        console.log(`当前时间: ${hour}:${minute.toString().padStart(2, '0')}`);
+        console.log(`当前时辰: ${currentBranch}, 当前刻: ${currentKe}`);
+        
+        // 计算时辰的分段
+        const branchPart = getBranchPartByTime(currentBranch, hour, minute);
+        console.log(`时辰${currentBranch}的分段计算结果: 第${branchPart}份`);
+        
+        // 获取时辰对应的星司
+        const branchStarKey = `${currentBranch}-${branchPart}`;
+        const branchStar = xingsiNames[branchStarKey];
+        console.log(`时辰星司: ${branchStarKey} -> ${branchStar || '未找到'}`);
+        
+        // 获取刻对应的星司
+        const keStarKey = `${currentKe}-1`;
+        const keStar = xingsiNames[keStarKey];
+        console.log(`刻星司: ${keStarKey} -> ${keStar || '未找到'}`);
+        
+        // 获取机锋门
+        const jifengMen = calculateJifengMen();
+        if (jifengMen) {
+            console.log(`机锋门: 天盘=${jifengMen.tianpan}, 地盘=${jifengMen.dipan}`);
+            
+            // 计算机锋门天盘星司
+            if (jifengMen.tianpan && jifengMen.tianpan !== "无") {
+                const tianpanPart = getBranchPartByTime(jifengMen.tianpan, hour, minute);
+                const tianpanStarKey = `${jifengMen.tianpan}-${tianpanPart}`;
+                const tianpanStar = xingsiNames[tianpanStarKey];
+                console.log(`机锋门天盘星司: ${tianpanStarKey} -> ${tianpanStar || '未找到'}`);
+            }
+            
+            // 计算机锋门地盘星司
+            const dipanPart = getBranchPartByTime(jifengMen.dipan, hour, minute);
+            const dipanStarKey = `${jifengMen.dipan}-${dipanPart}`;
+            const dipanStar = xingsiNames[dipanStarKey];
+            console.log(`机锋门地盘星司: ${dipanStarKey} -> ${dipanStar || '未找到'}`);
+        } else {
+            console.log("无法计算机锋门");
+        }
+        
+        // 显示所有地支的当前分段和星司
+        console.log("\n所有地支的当前分段和星司:");
+        dizhi.forEach(branch => {
+            const part = getBranchPartByTime(branch, hour, minute);
+            const starKey = `${branch}-${part}`;
+            const star = xingsiNames[starKey];
+            console.log(`${branch}: 第${part}份 -> ${star || '未找到'}`);
+        });
+        
+        // 在页面上显示调试信息
+        const debugInfo = document.createElement('div');
+        debugInfo.className = 'alert alert-info mt-3';
+        debugInfo.innerHTML = `
+            <h5>星司计算调试信息</h5>
+            <p>当前时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
+            <p>当前时辰: ${currentBranch}, 第${branchPart}份 -> ${branchStar || '未找到'}</p>
+            <p>当前刻: ${currentKe} -> ${keStar || '未找到'}</p>
+            ${jifengMen ? `
+                <p>机锋门: 天盘=${jifengMen.tianpan}, 地盘=${jifengMen.dipan}</p>
+                ${jifengMen.tianpan && jifengMen.tianpan !== "无" ? 
+                    `<p>机锋门天盘星司: ${jifengMen.tianpan}-${getBranchPartByTime(jifengMen.tianpan, hour, minute)} -> ${xingsiNames[`${jifengMen.tianpan}-${getBranchPartByTime(jifengMen.tianpan, hour, minute)}`] || '未找到'}</p>` : 
+                    ''}
+                <p>机锋门地盘星司: ${jifengMen.dipan}-${getBranchPartByTime(jifengMen.dipan, hour, minute)} -> ${xingsiNames[`${jifengMen.dipan}-${getBranchPartByTime(jifengMen.dipan, hour, minute)}`] || '未找到'}</p>
+            ` : '<p>无法计算机锋门</p>'}
+        `;
+        
+        // 将调试信息添加到页面
+        const container = document.querySelector('.container');
+        if (container) {
+            // 移除之前的调试信息
+            const oldDebugInfo = document.querySelector('.alert.alert-info.mt-3');
+            if (oldDebugInfo) {
+                oldDebugInfo.remove();
+            }
+            container.appendChild(debugInfo);
+        }
+        
+        console.log("===== 调试完成 =====");
+    } catch (error) {
+        console.error("调试星司计算时出错:", error);
+    }
+}
+
+// 测试所有地支的分段计算
+function testAllBranchParts() {
+    console.log("===== 测试所有地支分段 =====");
+    
+    try {
+        // 获取当前时间
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        
+        console.log(`当前时间: ${hour}:${minute}`);
+        
+        // 创建结果容器
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'alert alert-primary mt-3';
+        resultDiv.innerHTML = `<h5>当前时间 ${hour}:${minute} 的地支分段测试</h5>`;
+        
+        // 创建表格显示结果
+        const table = document.createElement('table');
+        table.className = 'table table-striped table-bordered';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>地支</th>
+                    <th>总份数</th>
+                    <th>当前第几份</th>
+                    <th>对应星司</th>
+                    <th>星司编号</th>
+                    <th>时间范围</th>
+                </tr>
+            </thead>
+            <tbody id="parts-test-body">
+            </tbody>
+        `;
+        
+        resultDiv.appendChild(table);
+        
+        // 将结果添加到页面
+        const container = document.querySelector('.container');
+        if (container) {
+            // 移除之前的测试结果
+            const oldResult = document.querySelector('.alert.alert-primary.mt-3');
+            if (oldResult) {
+                oldResult.remove();
+            }
+            container.appendChild(resultDiv);
+        }
+        
+        // 获取表格体
+        const tableBody = document.getElementById('parts-test-body');
+        
+        // 获取当前时辰
+        const currentBranch = getCurrentTimeBranch();
+        console.log(`当前时辰: ${currentBranch}`);
+        
+        // 测试所有地支
+        dizhi.forEach(branch => {
+            try {
+                // 获取总份数
+                const totalParts = dizhiParts[branch] || 1;
+                
+                // 计算当前份数
+                const currentPart = getBranchPartByTime(branch, hour, minute);
+                
+                // 获取对应星司
+                const starKey = `${branch}-${currentPart}`;
+                const star = xingsiNames[starKey];
+                const starNumber = star ? xingsiNumberMap[star] : '?';
+                
+                // 计算时间范围
+                const totalMinutesInDay = 24 * 60; // 1440分钟
+                const minutesPerPart = totalMinutesInDay / totalParts;
+                
+                const startMinutes = (currentPart - 1) * minutesPerPart;
+                const endMinutes = currentPart * minutesPerPart;
+                
+                const startHour = Math.floor(startMinutes / 60);
+                const startMinute = Math.floor(startMinutes % 60);
+                const endHour = Math.floor(endMinutes / 60);
+                const endMinute = Math.floor(endMinutes % 60);
+                
+                const startTimeStr = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+                const endTimeStr = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+                
+                const timeRange = `${startTimeStr}-${endTimeStr}`;
+                
+                // 高亮当前时辰
+                const isCurrentBranch = (branch === currentBranch);
+                
+                // 添加到表格
+                const row = document.createElement('tr');
+                if (isCurrentBranch) {
+                    row.className = 'table-success';
+                }
+                row.innerHTML = `
+                    <td>${branch}${isCurrentBranch ? ' (当前时辰)' : ''}</td>
+                    <td>${totalParts}</td>
+                    <td>${currentPart}</td>
+                    <td>${star || '未找到'}</td>
+                    <td>${starNumber}</td>
+                    <td>${timeRange}</td>
+                `;
+                
+                tableBody.appendChild(row);
+                
+                console.log(`地支 ${branch}: 共${totalParts}份，当前第${currentPart}份 -> ${star || '未找到'}(${starNumber})，时间范围: ${timeRange}`);
+            } catch (error) {
+                console.error(`测试地支 ${branch} 时出错:`, error);
+            }
+        });
+        
+        console.log("===== 测试完成 =====");
+    } catch (error) {
+        console.error("测试所有地支分段时出错:", error);
     }
 }
