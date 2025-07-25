@@ -82,8 +82,7 @@ const xingsiNames = {
     "酉-2": "天田",
     "戌-1": "天江",
     "戌-2": "天辐",
-    "亥-1": "天籥",
-    "亥-2": "天井"
+    "亥-1": "天籥", "亥-2": "天井"
 };
 
 // 星司对应的数字映射
@@ -2115,6 +2114,36 @@ function calculateYongShen() {
         const currentKe = getCurrentKe();
         console.log(`当前刻: ${currentKe}`);
         
+        // 计算机锋门
+        const jifengMen = calculateJifengMen();
+        let jifengTianpan = "无";
+        let jifengDipan = "无";
+        let jifengTianpanStar = "无";
+        let jifengDipanStar = "无";
+        let jifengTianpanStarNumber = "?";
+        let jifengDipanStarNumber = "?";
+        let jifengResult = "无法计算";
+        
+        if (jifengMen && jifengMen.tianpan && jifengMen.dipan) {
+            jifengTianpan = jifengMen.tianpan;
+            jifengDipan = jifengMen.dipan;
+            
+            // 计算机锋门天盘星司
+            const jifengTianpanPart = getBranchPartByTime(jifengTianpan, hour, minute);
+            const jifengTianpanKey = `${jifengTianpan}-${jifengTianpanPart}`;
+            jifengTianpanStar = xingsiNames[jifengTianpanKey] || "无";
+            jifengTianpanStarNumber = xingsiNumberMap[jifengTianpanStar] || "?";
+            
+            // 计算机锋门地盘星司
+            const jifengDipanPart = getBranchPartByTime(jifengDipan, hour, minute);
+            const jifengDipanKey = `${jifengDipan}-${jifengDipanPart}`;
+            jifengDipanStar = xingsiNames[jifengDipanKey] || "无";
+            jifengDipanStarNumber = xingsiNumberMap[jifengDipanStar] || "?";
+            
+            // 计算机锋门推字
+            jifengResult = calculateTuiziForYongShen(jifengTianpanStar, jifengDipanStarNumber);
+        }
+        
         // 计算善司（刻前一宫）
         const keIndex = getBranchIndex(currentKe);
         const prevKeIndex = (keIndex - 1 + 12) % 12;
@@ -2215,66 +2244,93 @@ function calculateYongShen() {
         const resultElement = document.getElementById("yongshen-result");
         if (resultElement) {
             resultElement.innerHTML = `
-                <div class="card mb-3">
-                    <div class="card-header bg-success text-white">
-                        天机推字结果
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                天机
+                            </div>
+                            <div class="card-body">
+                                <p>${yongshenTianpan}+${selectedYongShen}</p>
+                                <p>${tianpanStar}+${dizhiStar}</p>
+                                <p> <span class="badge bg-success">${tianjiResult}</span></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p><strong>用神地盘:</strong> ${selectedYongShen} → <strong>天盘星司:</strong> ${dizhiStar} <span class="badge badge-primary">${dizhiStarNumber}</span></p>
-                        <p><strong>对应天盘:</strong> ${yongshenTianpan} → <strong>地盘星司:</strong> ${tianpanStar} <span class="badge badge-secondary">${tianpanStarNumber}</span></p>
-                        <p><strong>推字计算:</strong> 在${dizhiStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${tianpanStarNumber}位</p>
-                        <p><strong>天机推字:</strong> <span class="badge badge-success">${tianjiResult}</span></p>
-                    </div>
-                </div>
-                
-                <div class="card mb-3">
-                    <div class="card-header bg-info text-white">
-                        地机推字结果
-                    </div>
-                    <div class="card-body">
-                        <p><strong>地机地盘:</strong> ${dijiGong} → <strong>天盘星司:</strong> ${dijiStar} <span class="badge badge-primary">${dijiStarNumber}</span></p>
-                        <p><strong>对应天盘:</strong> ${dijiTianpan} → <strong>地盘星司:</strong> ${dijiTianpanStar} <span class="badge badge-secondary">${dijiTianpanStarNumber}</span></p>
-                        <p><strong>推字计算:</strong> 在${dijiStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${dijiTianpanStarNumber}位</p>
-                        <p><strong>地机推字:</strong> <span class="badge badge-info">${dijiResult}</span></p>
-                    </div>
-                </div>
-                
-                <div class="card mb-3">
-                    <div class="card-header bg-warning text-dark">
-                        人机推字结果
-                    </div>
-                    <div class="card-body">
-                        <p><strong>人机天盘:</strong> ${selectedTianpan} → <strong>天盘星司:</strong> ${renjiTianpanStar} <span class="badge badge-primary">${renjiTianpanStarNumber}</span></p>
-                        <p><strong>对应地盘:</strong> ${renjiDipan} → <strong>地盘星司:</strong> ${renjiDipanStar} <span class="badge badge-secondary">${renjiDipanStarNumber}</span></p>
-                        <p><strong>推字计算:</strong> 在${renjiTianpanStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${renjiDipanStarNumber}位</p>
-                        <p><strong>人机推字:</strong> <span class="badge badge-warning text-dark">${renjiResult}</span></p>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                地机
+                            </div>
+                            <div class="card-body">
+                                <p>${dijiTianpan}+${dijiGong}</p>
+                                <p>${dijiTianpanStar}+${dijiStar}</p>
+                                <p><span class="badge bg-info">${dijiResult}</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="card mb-3">
-                    <div class="card-header bg-primary text-white">
-                        善司推字结果
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-warning text-dark">
+                                人机
+                            </div>
+                            <div class="card-body">
+                                <p>${selectedTianpan}+${renjiDipan}</p>
+                                <p> ${renjiTianpanStar}+${renjiDipanStar}</p>
+                                <p><span class="badge bg-warning text-dark">${renjiResult}</span></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p><strong>善司计算:</strong> 刻(${currentKe})前一宫为${prevKe}，对冲宫为${shansiDipan}</p>
-                        <p><strong>善司地盘:</strong> ${shansiDipan} → <strong>地盘星司:</strong> ${shansiDipanStar} <span class="badge badge-secondary">${shansiDipanStarNumber}</span></p>
-                        <p><strong>对应天盘:</strong> ${shansiTianpan} → <strong>天盘星司:</strong> ${shansiTianpanStar} <span class="badge badge-primary">${shansiTianpanStarNumber}</span></p>
-                        <p><strong>推字计算:</strong> 在${shansiTianpanStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${shansiDipanStarNumber}位</p>
-                        <p><strong>善司推字:</strong> <span class="badge badge-primary">${shansiResult}</span></p>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                善司
+                            </div>
+                            <div class="card-body">
+                                <p><${shansiTianpan}+${shansiDipan}</p>
+                                <p> ${shansiTianpanStar})+${shansiDipanStar}</p>
+                                <p><span class="badge bg-primary">${shansiResult}</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        值使推字结果
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-secondary text-white">
+                                值使
+                            </div>
+                            <div class="card-body">
+                                <p> ${zhishiTianpan}+${zhishiDipan}</p>
+                                <p>${zhishiTianpanStar}+${zhishiDipanStar}</p>
+                                <p> <span class="badge bg-secondary">${zhishiResult}</span></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p><strong>值使计算:</strong> 刻(${currentKe})后一宫为${nextKe}，对冲宫为${zhishiDipan}</p>
-                        <p><strong>值使地盘:</strong> ${zhishiDipan} → <strong>地盘星司:</strong> ${zhishiDipanStar} <span class="badge badge-secondary">${zhishiDipanStarNumber}</span></p>
-                        <p><strong>对应天盘:</strong> ${zhishiTianpan} → <strong>天盘星司:</strong> ${zhishiTianpanStar} <span class="badge badge-primary">${zhishiTianpanStarNumber}</span></p>
-                        <p><strong>推字计算:</strong> 在${zhishiTianpanStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${zhishiDipanStarNumber}位</p>
-                        <p><strong>值使推字:</strong> <span class="badge badge-danger">${zhishiResult}</span></p>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-danger text-white">
+                                机锋门
+                            </div>
+                            <div class="card-body">
+                                <p> ${jifengTianpan}+${jifengDipan}</p>
+                                <p> ${jifengTianpanStar}+${jifengDipanStar}</p>
+                                <p><span class="badge bg-danger">${jifengResult}</span></p>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                
+                <div class="small text-muted mt-3">
+                    <p>占卜类型: ${zhanType}</p>
+                    <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
                 </div>
             `;
         }

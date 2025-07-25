@@ -324,36 +324,36 @@
     margin-left: 5px;
 }
 
-#yongshen-result .badge-primary {
-    background-color: #007bff;
+#yongshen-result .bg-primary {
+    background-color: #007bff !important;
     font-size: 1.2rem;
     padding: 5px 10px;
 }
 
-#yongshen-result .badge-secondary {
-    background-color: #6c757d;
+#yongshen-result .bg-secondary {
+    background-color: #6c757d !important;
 }
 
-#yongshen-result .badge-success {
-    background-color: #28a745;
+#yongshen-result .bg-success {
+    background-color: #28a745 !important;
     font-size: 1.2rem;
     padding: 5px 10px;
 }
 
-#yongshen-result .badge-info {
-    background-color: #17a2b8;
+#yongshen-result .bg-info {
+    background-color: #17a2b8 !important;
     font-size: 1.2rem;
     padding: 5px 10px;
 }
 
-#yongshen-result .badge-warning {
-    background-color: #ffc107;
+#yongshen-result .bg-warning {
+    background-color: #ffc107 !important;
     font-size: 1.2rem;
     padding: 5px 10px;
 }
 
-#yongshen-result .badge-danger {
-    background-color: #dc3545;
+#yongshen-result .bg-danger {
+    background-color: #dc3545 !important;
     font-size: 1.2rem;
     padding: 5px 10px;
 }
