@@ -1140,107 +1140,61 @@ function updateTuiziInfo() {
     }
 }
 
-// 页面加载时执行
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("页面加载完成，开始初始化");
+// 页面加载完成后的初始化
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("页面加载完成，初始化...");
     
-    try {
-        // 确保星司数据已初始化
-        initXingsiData();
+    // 初始化地支下拉框
+    initDizhiDropdowns();
+    
+    // 初始化星司数据
+    initXingsiData();
+    
+    // 更新当前时间显示
+    updateTimeDisplay();
+    
+    // 设置定时器，每分钟检查一次时间变化
+    setInterval(function() {
+        const now = new Date();
+        const minute = now.getMinutes();
         
-        // 测试星司分段计算
-        testXingsiPartCalculation();
-        
-        // 初始化下拉框
-        initDropdowns();
-        
-        // 更新当前时间显示
-        updateTimeDisplay();
-        
-        // 显示星司卡片
-        const xingsiCard = document.getElementById('xingsi-card');
-        if (xingsiCard) {
-            xingsiCard.style.display = 'block';
+        // 如果分钟变化了，更新时间显示
+        if (lastMinute !== minute) {
+            updateTimeDisplay();
+            lastMinute = minute;
         }
-        
-        // 添加下拉框变化事件监听
-        const tianpan = document.getElementById('tianpan');
-        const dipan = document.getElementById('dipan');
-        
-        if (tianpan) {
-            tianpan.addEventListener('change', function() {
-                console.log(`天盘变更为 ${this.value}`);
-            });
-        }
-        
-        if (dipan) {
-            dipan.addEventListener('change', function() {
-                console.log(`地盘变更为 ${this.value}`);
-            });
-        }
-        
-        // 添加排盘按钮事件监听
-        const paipanBtn = document.getElementById('paipan-btn');
-        if (paipanBtn) {
-            paipanBtn.addEventListener('click', function() {
-                console.log("点击排盘按钮");
-                updateTable();
-            });
-        }
-        
-        // 添加刷新时间按钮事件监听
-        const refreshBtn = document.getElementById('refresh-btn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', function() {
-                console.log("点击刷新时间按钮");
-                updateTimeDisplay();
-            });
-        }
-        
-        // 添加调试按钮
-        const debugBtn = document.createElement('button');
-        debugBtn.textContent = '调试星司计算';
-        debugBtn.className = 'btn btn-warning mt-2';
-        debugBtn.style.display = 'block';
-        debugBtn.style.margin = '10px auto';
-        debugBtn.addEventListener('click', function() {
-            debugXingsiCalculation();
+    }, 10000); // 每10秒检查一次
+    
+    // 排盘按钮点击事件
+    const paipanBtn = document.getElementById("paipan-btn");
+    if (paipanBtn) {
+        paipanBtn.addEventListener("click", function() {
+            updateTable();
+            updateJifengMen();
+            updateXingsiInfo();
+            updateTuiziInfo();
         });
-        
-        // 添加分段测试按钮
-        const testPartsBtn = document.createElement('button');
-        testPartsBtn.textContent = '测试所有地支分段';
-        testPartsBtn.className = 'btn btn-danger mt-2';
-        testPartsBtn.style.display = 'block';
-        testPartsBtn.style.margin = '10px auto';
-        testPartsBtn.addEventListener('click', function() {
-            testAllBranchParts();
-        });
-        
-        // 将按钮添加到页面
-        const container = document.querySelector('.container');
-        if (container) {
-            container.appendChild(debugBtn);
-            container.appendChild(testPartsBtn);
-        }
-        
-        // 定时检查时间变化
-        setInterval(() => {
-            const now = new Date();
-            const currentMinute = now.getMinutes();
-            const lastMinute = lastCheckedTime ? lastCheckedTime.getMinutes() : -1;
-            
-            if (currentMinute !== lastMinute) {
-                console.log("分钟变化，更新时间");
-                updateTimeDisplay();
-                lastCheckedTime = now;
-            }
-        }, 1000);
-        
-        console.log("初始化完成");
-    } catch (error) {
-        console.error("初始化过程中出错:", error);
     }
+    
+    // 刷新时间按钮点击事件
+    const refreshBtn = document.getElementById("refresh-btn");
+    if (refreshBtn) {
+        refreshBtn.addEventListener("click", updateTimeDisplay);
+    }
+    
+    // 测试星司计算按钮点击事件
+    const testXingsiBtn = document.getElementById("test-xingsi-btn");
+    if (testXingsiBtn) {
+        testXingsiBtn.addEventListener("click", testAllBranchParts);
+    }
+    
+    // 用神计算按钮事件
+    const yongshenBtn = document.getElementById("yongshen-btn");
+    if (yongshenBtn) {
+        yongshenBtn.addEventListener("click", calculateYongShen);
+    }
+    
+    console.log("初始化完成");
 });
 
 // 初始化星司数据
@@ -1478,28 +1432,48 @@ const xingsiTuiziMap = {
 }; 
 
 // 全局变量
-let lastCheckedTime = new Date();  // 上次检查时间
+let lastCheckedTime = null; // 上次检查时间
+let lastMinute = -1; // 上次检查的分钟值
 
-// 初始化下拉框
-function initDropdowns() {
-    console.log("初始化下拉框...");
+// 初始化地支下拉框
+function initDizhiDropdowns() {
+    console.log("初始化地支下拉框");
     
     try {
-        // 填充下拉框
-        fillSelect('tianpan');
-        fillSelect('dipan');
-        
-        // 检查下拉框是否正确填充
         const tianpanSelect = document.getElementById('tianpan');
         const dipanSelect = document.getElementById('dipan');
         
-        if (tianpanSelect && dipanSelect) {
-            console.log(`下拉框初始值: 天盘=${tianpanSelect.value}, 地盘=${dipanSelect.value}`);
-        } else {
+        if (!tianpanSelect || !dipanSelect) {
             console.error("未找到下拉框元素");
+            return;
         }
+        
+        // 清空现有选项
+        tianpanSelect.innerHTML = '<option value="" selected disabled>请选择天盘</option>';
+        dipanSelect.innerHTML = '<option value="" selected disabled>请选择地盘</option>';
+        
+        // 添加地支选项
+        dizhi.forEach(branch => {
+            const tianpanOption = document.createElement('option');
+            tianpanOption.value = branch;
+            tianpanOption.textContent = branch;
+            tianpanSelect.appendChild(tianpanOption);
+            
+            const dipanOption = document.createElement('option');
+            dipanOption.value = branch;
+            dipanOption.textContent = branch;
+            dipanSelect.appendChild(dipanOption);
+        });
+        
+        // 添加"无"选项到天盘
+        const noneOption = document.createElement('option');
+        noneOption.value = "无";
+        noneOption.textContent = "无";
+        tianpanSelect.appendChild(noneOption);
+        
+        console.log("地支下拉框初始化完成");
     } catch (error) {
-        console.error("初始化下拉框时出错:", error);
+        console.error("初始化地支下拉框时出错:", error);
     }
 }
 
@@ -1878,5 +1852,242 @@ function testAllBranchParts() {
         console.log("===== 测试完成 =====");
     } catch (error) {
         console.error("测试所有地支分段时出错:", error);
+    }
+}
+
+// 获取对冲宫
+function getOppositeGong(dizhi) {
+    const oppositeMap = {
+        "子": "午", "午": "子",
+        "丑": "未", "未": "丑",
+        "寅": "申", "申": "寅",
+        "卯": "酉", "酉": "卯",
+        "辰": "戌", "戌": "辰",
+        "巳": "亥", "亥": "巳"
+    };
+    return oppositeMap[dizhi] || dizhi;
+}
+
+// 用神计算和推字功能
+function calculateYongShen() {
+    try {
+        console.log("计算用神...");
+        
+        // 获取用神选择
+        const yongshenSelect = document.getElementById("yongshen-select");
+        if (!yongshenSelect) {
+            console.error("未找到用神选择元素");
+            return;
+        }
+        
+        const selectedYongShen = yongshenSelect.value;
+        if (!selectedYongShen) {
+            alert("请先选择用神");
+            return;
+        }
+        
+        console.log(`选择的用神: ${selectedYongShen}`);
+        
+        // 获取当前表格中的天盘内容
+        const tianpanMap = {};
+        
+        for (let i = 1; i <= 4; i++) {
+            for (let j = 1; j <= 4; j++) {
+                const cellId = `fill-${i}-${j}`;
+                const cell = document.getElementById(cellId);
+                if (cell) {
+                    const dizhiCell = cell.closest('td').querySelector('.dz-label');
+                    if (dizhiCell) {
+                        const dizhi = dizhiCell.textContent;
+                        const tianpan = cell.textContent;
+                        tianpanMap[dizhi] = tianpan;
+                        console.log(`位置 ${i}-${j}: 地盘=${dizhi}, 天盘=${tianpan}`);
+                    }
+                }
+            }
+        }
+        
+        // 检查用神在天盘中的位置
+        const yongshenTianpan = tianpanMap[selectedYongShen];
+        if (!yongshenTianpan || yongshenTianpan === "无") {
+            const resultElement = document.getElementById("yongshen-result");
+            if (resultElement) {
+                resultElement.innerHTML = `<div class="alert alert-warning">用神 ${selectedYongShen} 对应的天盘为空或无效</div>`;
+            }
+            console.log(`用神 ${selectedYongShen} 对应的天盘为空或无效`);
+            return;
+        }
+        
+        console.log(`用神 ${selectedYongShen} 对应的天盘: ${yongshenTianpan}`);
+        
+        // 获取当前时间
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        
+        // 计算天盘地支对应的星司
+        const tianpanPart = getBranchPartByTime(yongshenTianpan, hour, minute);
+        const tianpanKey = `${yongshenTianpan}-${tianpanPart}`;
+        const tianpanStar = xingsiNames[tianpanKey];
+        
+        if (!tianpanStar) {
+            const resultElement = document.getElementById("yongshen-result");
+            if (resultElement) {
+                resultElement.innerHTML = `<div class="alert alert-warning">无法找到天盘 ${yongshenTianpan} 对应的星司</div>`;
+            }
+            console.log(`无法找到天盘 ${yongshenTianpan} 对应的星司`);
+            return;
+        }
+        
+        const tianpanStarNumber = xingsiNumberMap[tianpanStar] || 0;
+        
+        // 计算地盘地支对应的星司
+        const dizhiPart = getBranchPartByTime(selectedYongShen, hour, minute);
+        const dizhiKey = `${selectedYongShen}-${dizhiPart}`;
+        const dizhiStar = xingsiNames[dizhiKey];
+        
+        if (!dizhiStar) {
+            const resultElement = document.getElementById("yongshen-result");
+            if (resultElement) {
+                resultElement.innerHTML = `<div class="alert alert-warning">无法找到地盘 ${selectedYongShen} 对应的星司</div>`;
+            }
+            console.log(`无法找到地盘 ${selectedYongShen} 对应的星司`);
+            return;
+        }
+        
+        const dizhiStarNumber = xingsiNumberMap[dizhiStar] || 0;
+        
+        // 计算天机推字结果
+        const tianjiResult = calculateTuiziForYongShen(dizhiStar, tianpanStarNumber);
+        
+        // 计算地机（天机对冲宫）
+        const dijiGong = getOppositeGong(selectedYongShen);
+        console.log(`地机宫位: ${dijiGong} (${selectedYongShen}的对冲宫)`);
+        
+        // 检查地机宫位是否有效
+        if (!dijiGong) {
+            console.error(`无法找到 ${selectedYongShen} 的对冲宫`);
+            return;
+        }
+        
+        // 计算地机对应的星司
+        const dijiPart = getBranchPartByTime(dijiGong, hour, minute);
+        const dijiKey = `${dijiGong}-${dijiPart}`;
+        const dijiStar = xingsiNames[dijiKey];
+        
+        if (!dijiStar) {
+            console.error(`无法找到地机宫位 ${dijiGong} 对应的星司`);
+            return;
+        }
+        
+        const dijiStarNumber = xingsiNumberMap[dijiStar] || 0;
+        console.log(`地机星司: ${dijiStar}(${dijiStarNumber})`);
+        
+        // 计算地机对应的天盘
+        const dijiTianpan = tianpanMap[dijiGong];
+        if (!dijiTianpan || dijiTianpan === "无") {
+            console.error(`地机宫位 ${dijiGong} 对应的天盘为空或无效`);
+            return;
+        }
+        
+        // 计算地机天盘对应的星司
+        const dijiTianpanPart = getBranchPartByTime(dijiTianpan, hour, minute);
+        const dijiTianpanKey = `${dijiTianpan}-${dijiTianpanPart}`;
+        const dijiTianpanStar = xingsiNames[dijiTianpanKey];
+        
+        if (!dijiTianpanStar) {
+            console.error(`无法找到地机天盘 ${dijiTianpan} 对应的星司`);
+            return;
+        }
+        
+        const dijiTianpanStarNumber = xingsiNumberMap[dijiTianpanStar] || 0;
+        console.log(`地机天盘星司: ${dijiTianpanStar}(${dijiTianpanStarNumber})`);
+        
+        // 计算地机推字结果
+        const dijiResult = calculateTuiziForYongShen(dijiStar, dijiTianpanStarNumber);
+        
+        // 获取占卜类型
+        const taZhanRadio = document.getElementById("taZhan");
+        const isForOthers = taZhanRadio && taZhanRadio.checked;
+        const zhanType = isForOthers ? "他占" : "自占";
+        
+        // 更新结果显示
+        const resultElement = document.getElementById("yongshen-result");
+        if (resultElement) {
+            resultElement.innerHTML = `
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        天机推字结果
+                    </div>
+                    <div class="card-body">
+                        <p><strong>用神地盘:</strong> ${selectedYongShen} → <strong>天盘星司:</strong> ${dizhiStar} <span class="badge badge-primary">${dizhiStarNumber}</span></p>
+                        <p><strong>对应天盘:</strong> ${yongshenTianpan} → <strong>地盘星司:</strong> ${tianpanStar} <span class="badge badge-secondary">${tianpanStarNumber}</span></p>
+                        <p><strong>推字计算:</strong> 在${dizhiStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${tianpanStarNumber}位</p>
+                        <p><strong>天机推字:</strong> <span class="badge badge-success">${tianjiResult}</span></p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        地机推字结果
+                    </div>
+                    <div class="card-body">
+                        <p><strong>地机地盘:</strong> ${dijiGong} → <strong>天盘星司:</strong> ${dijiStar} <span class="badge badge-primary">${dijiStarNumber}</span></p>
+                        <p><strong>对应天盘:</strong> ${dijiTianpan} → <strong>地盘星司:</strong> ${dijiTianpanStar} <span class="badge badge-secondary">${dijiTianpanStarNumber}</span></p>
+                        <p><strong>推字计算:</strong> 在${dijiStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${dijiTianpanStarNumber}位</p>
+                        <p><strong>地机推字:</strong> <span class="badge badge-info">${dijiResult}</span></p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        console.log("用神计算完成");
+    } catch (error) {
+        console.error("计算用神时出错:", error);
+    }
+}
+
+// 用神推字计算
+function calculateTuiziForYongShen(tianpanStar, dizhiNumber) {
+    try {
+        console.log(`计算推字: 天盘星司=${tianpanStar}, 地盘星司数=${dizhiNumber}`);
+        
+        // 获取天盘星司对应的推字表
+        const tuiziList = xingsiTuiziMap[tianpanStar];
+        if (!tuiziList || tuiziList.length === 0) {
+            console.error(`未找到星司 ${tianpanStar} 的推字表`);
+            return "无法计算";
+        }
+        
+        // 获取占卜类型
+        const taZhanRadio = document.getElementById("taZhan");
+        const isForOthers = taZhanRadio && taZhanRadio.checked;
+        
+        console.log(`占卜类型: ${isForOthers ? "他占" : "自占"}`);
+        
+        // 计算推字索引
+        let index;
+        if (isForOthers) {
+            // 他占：顺数
+            index = (dizhiNumber - 1) % tuiziList.length;
+            console.log(`他占顺数: 地盘星司数=${dizhiNumber}，在天盘星司推字表中顺数第${index + 1}个字`);
+        } else {
+            // 自占：逆数
+            index = (tuiziList.length - dizhiNumber) % tuiziList.length;
+            if (index < 0) index += tuiziList.length;
+            console.log(`自占逆数: 地盘星司数=${dizhiNumber}，在天盘星司推字表中逆数第${tuiziList.length - index}个字`);
+        }
+        
+        // 确保索引在有效范围内
+        if (index < 0) index = 0;
+        if (index >= tuiziList.length) index = tuiziList.length - 1;
+        
+        const result = tuiziList[index];
+        console.log(`推字结果: 索引=${index}, 结果=${result}`);
+        
+        return result;
+    } catch (error) {
+        console.error("计算推字时出错:", error);
+        return "计算错误";
     }
 }

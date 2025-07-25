@@ -165,6 +165,39 @@
         </tbody>
       </table>
     </div>
+
+    <!-- 用神选择 -->
+    <div class="row mb-4">
+      <div class="col-md-6 offset-md-3">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">用神选择</h5>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="yongshen-select">用神</label>
+              <select class="form-control" id="yongshen-select">
+                <option value="" selected disabled>请选择用神</option>
+                <option value="子">子</option>
+                <option value="丑">丑</option>
+                <option value="寅">寅</option>
+                <option value="卯">卯</option>
+                <option value="辰">辰</option>
+                <option value="巳">巳</option>
+                <option value="午">午</option>
+                <option value="未">未</option>
+                <option value="申">申</option>
+                <option value="酉">酉</option>
+                <option value="戌">戌</option>
+                <option value="亥">亥</option>
+              </select>
+            </div>
+            <button id="yongshen-btn" class="btn btn-primary">计算用神</button>
+            <div id="yongshen-result" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <!-- 机锋门卡片 -->
     <div class="card mb-4" id="jifeng-card">

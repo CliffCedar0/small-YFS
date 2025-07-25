@@ -263,3 +263,97 @@
         margin-top: 2px;
     }
 } 
+
+/* 时间信息样式 */
+.time-info {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .cell-center {
+        height: 70px;
+        font-size: 1rem;
+        padding: 5px;
+    }
+    
+    .tp-label {
+        font-size: 1.3rem;
+        margin-bottom: 5px;
+    }
+    
+    .dz-label {
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+}
+
+/* 机锋门样式 */
+#jifeng-result {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* 星司样式 */
+.xingsi-label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.xingsi-value {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+.xingsi-number {
+    background-color: #5bc0de;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+
+/* 用神结果样式 */
+#yongshen-result .card-header {
+    font-weight: bold;
+}
+
+#yongshen-result .badge {
+    font-size: 1rem;
+    margin-left: 5px;
+}
+
+#yongshen-result .badge-primary {
+    background-color: #007bff;
+}
+
+#yongshen-result .badge-secondary {
+    background-color: #6c757d;
+}
+
+#yongshen-result .badge-success {
+    background-color: #28a745;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+
+#yongshen-result .badge-info {
+    background-color: #17a2b8;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+
+/* 天机地机卡片样式 */
+#yongshen-result .card {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+#yongshen-result .card-header.bg-success {
+    background-color: #28a745 !important;
+}
+
+#yongshen-result .card-header.bg-info {
+    background-color: #17a2b8 !important;
+} 
