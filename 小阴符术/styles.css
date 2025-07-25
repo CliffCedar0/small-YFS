@@ -326,6 +326,8 @@
 
 #yongshen-result .badge-primary {
     background-color: #007bff;
+    font-size: 1.2rem;
+    padding: 5px 10px;
 }
 
 #yongshen-result .badge-secondary {
@@ -344,7 +346,19 @@
     padding: 5px 10px;
 }
 
-/* 天机地机卡片样式 */
+#yongshen-result .badge-warning {
+    background-color: #ffc107;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+
+#yongshen-result .badge-danger {
+    background-color: #dc3545;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+}
+
+/* 天机地机人机卡片样式 */
 #yongshen-result .card {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
@@ -356,4 +370,16 @@
 
 #yongshen-result .card-header.bg-info {
     background-color: #17a2b8 !important;
+}
+
+#yongshen-result .card-header.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+#yongshen-result .card-header.bg-primary {
+    background-color: #007bff !important;
+}
+
+#yongshen-result .card-header.bg-danger {
+    background-color: #dc3545 !important;
 } 

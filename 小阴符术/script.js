@@ -1868,6 +1868,36 @@ function getOppositeGong(dizhi) {
     return oppositeMap[dizhi] || dizhi;
 }
 
+// 获取前一个地支
+function getPreviousBranch(dizhi) {
+    const dizhiIndex = dizhi.indexOf(dizhi);
+    if (dizhiIndex === -1) {
+        return null;
+    }
+    const prevIndex = (dizhiIndex - 1 + dizhi.length) % dizhi.length;
+    return dizhi[prevIndex];
+}
+
+// 获取后一个地支
+function getNextBranch(dizhi) {
+    const dizhiIndex = dizhi.indexOf(dizhi);
+    if (dizhiIndex === -1) {
+        return null;
+    }
+    const nextIndex = (dizhiIndex + 1) % dizhi.length;
+    return dizhi[nextIndex];
+}
+
+// 获取地支的索引
+function getBranchIndex(branch) {
+    return dizhi.indexOf(branch);
+}
+
+// 根据索引获取地支
+function getBranchByIndex(index) {
+    return dizhi[index % 12];
+}
+
 // 用神计算和推字功能
 function calculateYongShen() {
     try {
@@ -2006,6 +2036,176 @@ function calculateYongShen() {
         // 计算地机推字结果
         const dijiResult = calculateTuiziForYongShen(dijiStar, dijiTianpanStarNumber);
         
+        // 计算人机（天盘下拉框所选的天盘位置）
+        const tianpanSelect = document.getElementById('tianpan');
+        let selectedTianpan = "";
+        
+        if (tianpanSelect && tianpanSelect.value && tianpanSelect.value !== "无") {
+            // 如果天盘下拉框有选择值，则使用该值
+            selectedTianpan = tianpanSelect.value;
+            console.log(`使用天盘下拉框选择的值: ${selectedTianpan}`);
+        } else {
+            // 如果天盘下拉框未选择或选择了"无"，则使用当前时间计算的天盘值
+            const currentKe = getCurrentKe();
+            selectedTianpan = currentKe;
+            console.log(`使用当前时间计算的天盘值: ${selectedTianpan}`);
+        }
+        
+        if (!selectedTianpan) {
+            console.error("无法获取有效的天盘值");
+            return;
+        }
+        
+        console.log(`人机天盘: ${selectedTianpan}`);
+        
+        // 找到天盘对应的地盘位置
+        let renjiDipan = null;
+        for (const [dipan, tianpan] of Object.entries(tianpanMap)) {
+            if (tianpan === selectedTianpan) {
+                renjiDipan = dipan;
+                break;
+            }
+        }
+        
+        if (!renjiDipan) {
+            console.error(`未找到天盘 ${selectedTianpan} 对应的地盘位置`);
+            
+            // 尝试使用当前时辰作为地盘
+            const currentBranch = getCurrentTimeBranch();
+            if (currentBranch) {
+                renjiDipan = currentBranch;
+                console.log(`使用当前时辰 ${currentBranch} 作为人机地盘`);
+            } else {
+                return;
+            }
+        }
+        
+        console.log(`人机地盘: ${renjiDipan}`);
+        
+        // 计算人机地盘对应的星司
+        const renjiDipanPart = getBranchPartByTime(renjiDipan, hour, minute);
+        const renjiDipanKey = `${renjiDipan}-${renjiDipanPart}`;
+        const renjiDipanStar = xingsiNames[renjiDipanKey];
+        
+        if (!renjiDipanStar) {
+            console.error(`无法找到人机地盘 ${renjiDipan} 对应的星司`);
+            return;
+        }
+        
+        const renjiDipanStarNumber = xingsiNumberMap[renjiDipanStar] || 0;
+        console.log(`人机地盘星司: ${renjiDipanStar}(${renjiDipanStarNumber})`);
+        
+        // 计算人机天盘对应的星司
+        const renjiTianpanPart = getBranchPartByTime(selectedTianpan, hour, minute);
+        const renjiTianpanKey = `${selectedTianpan}-${renjiTianpanPart}`;
+        const renjiTianpanStar = xingsiNames[renjiTianpanKey];
+        
+        if (!renjiTianpanStar) {
+            console.error(`无法找到人机天盘 ${selectedTianpan} 对应的星司`);
+            return;
+        }
+        
+        const renjiTianpanStarNumber = xingsiNumberMap[renjiTianpanStar] || 0;
+        console.log(`人机天盘星司: ${renjiTianpanStar}(${renjiTianpanStarNumber})`);
+        
+        // 计算人机推字结果
+        const renjiResult = calculateTuiziForYongShen(renjiTianpanStar, renjiDipanStarNumber);
+        
+        // 获取当前刻
+        const currentKe = getCurrentKe();
+        console.log(`当前刻: ${currentKe}`);
+        
+        // 计算善司（刻前一宫）
+        const keIndex = getBranchIndex(currentKe);
+        const prevKeIndex = (keIndex - 1 + 12) % 12;
+        const prevKe = getBranchByIndex(prevKeIndex);
+        console.log(`刻前一宫: ${prevKe}`);
+        
+        // 找到善司地盘位置
+        const shansiDipan = getOppositeGong(prevKe);
+        console.log(`善司地盘: ${shansiDipan}`);
+        
+        // 计算善司对应的天盘
+        const shansiTianpan = tianpanMap[shansiDipan];
+        if (!shansiTianpan || shansiTianpan === "无") {
+            console.error(`善司地盘 ${shansiDipan} 对应的天盘为空或无效`);
+            return;
+        }
+        
+        console.log(`善司: ${shansiTianpan}+${shansiDipan}`);
+        
+        // 计算善司地盘对应的星司
+        const shansiDipanPart = getBranchPartByTime(shansiDipan, hour, minute);
+        const shansiDipanKey = `${shansiDipan}-${shansiDipanPart}`;
+        const shansiDipanStar = xingsiNames[shansiDipanKey];
+        
+        if (!shansiDipanStar) {
+            console.error(`无法找到善司地盘 ${shansiDipan} 对应的星司`);
+            return;
+        }
+        
+        const shansiDipanStarNumber = xingsiNumberMap[shansiDipanStar] || 0;
+        
+        // 计算善司天盘对应的星司
+        const shansiTianpanPart = getBranchPartByTime(shansiTianpan, hour, minute);
+        const shansiTianpanKey = `${shansiTianpan}-${shansiTianpanPart}`;
+        const shansiTianpanStar = xingsiNames[shansiTianpanKey];
+        
+        if (!shansiTianpanStar) {
+            console.error(`无法找到善司天盘 ${shansiTianpan} 对应的星司`);
+            return;
+        }
+        
+        const shansiTianpanStarNumber = xingsiNumberMap[shansiTianpanStar] || 0;
+        
+        // 计算善司推字结果
+        const shansiResult = calculateTuiziForYongShen(shansiTianpanStar, shansiDipanStarNumber);
+        
+        // 计算值使（刻后一宫）
+        const nextKeIndex = (keIndex + 1) % 12;
+        const nextKe = getBranchByIndex(nextKeIndex);
+        console.log(`刻后一宫: ${nextKe}`);
+        
+        // 找到值使地盘位置
+        const zhishiDipan = getOppositeGong(nextKe);
+        console.log(`值使地盘: ${zhishiDipan}`);
+        
+        // 计算值使对应的天盘
+        const zhishiTianpan = tianpanMap[zhishiDipan];
+        if (!zhishiTianpan || zhishiTianpan === "无") {
+            console.error(`值使地盘 ${zhishiDipan} 对应的天盘为空或无效`);
+            return;
+        }
+        
+        console.log(`值使: ${zhishiTianpan}+${zhishiDipan}`);
+        
+        // 计算值使地盘对应的星司
+        const zhishiDipanPart = getBranchPartByTime(zhishiDipan, hour, minute);
+        const zhishiDipanKey = `${zhishiDipan}-${zhishiDipanPart}`;
+        const zhishiDipanStar = xingsiNames[zhishiDipanKey];
+        
+        if (!zhishiDipanStar) {
+            console.error(`无法找到值使地盘 ${zhishiDipan} 对应的星司`);
+            return;
+        }
+        
+        const zhishiDipanStarNumber = xingsiNumberMap[zhishiDipanStar] || 0;
+        
+        // 计算值使天盘对应的星司
+        const zhishiTianpanPart = getBranchPartByTime(zhishiTianpan, hour, minute);
+        const zhishiTianpanKey = `${zhishiTianpan}-${zhishiTianpanPart}`;
+        const zhishiTianpanStar = xingsiNames[zhishiTianpanKey];
+        
+        if (!zhishiTianpanStar) {
+            console.error(`无法找到值使天盘 ${zhishiTianpan} 对应的星司`);
+            return;
+        }
+        
+        const zhishiTianpanStarNumber = xingsiNumberMap[zhishiTianpanStar] || 0;
+        
+        // 计算值使推字结果
+        const zhishiResult = calculateTuiziForYongShen(zhishiTianpanStar, zhishiDipanStarNumber);
+        
         // 获取占卜类型
         const taZhanRadio = document.getElementById("taZhan");
         const isForOthers = taZhanRadio && taZhanRadio.checked;
@@ -2027,7 +2227,7 @@ function calculateYongShen() {
                     </div>
                 </div>
                 
-                <div class="card">
+                <div class="card mb-3">
                     <div class="card-header bg-info text-white">
                         地机推字结果
                     </div>
@@ -2036,6 +2236,44 @@ function calculateYongShen() {
                         <p><strong>对应天盘:</strong> ${dijiTianpan} → <strong>地盘星司:</strong> ${dijiTianpanStar} <span class="badge badge-secondary">${dijiTianpanStarNumber}</span></p>
                         <p><strong>推字计算:</strong> 在${dijiStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${dijiTianpanStarNumber}位</p>
                         <p><strong>地机推字:</strong> <span class="badge badge-info">${dijiResult}</span></p>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header bg-warning text-dark">
+                        人机推字结果
+                    </div>
+                    <div class="card-body">
+                        <p><strong>人机天盘:</strong> ${selectedTianpan} → <strong>天盘星司:</strong> ${renjiTianpanStar} <span class="badge badge-primary">${renjiTianpanStarNumber}</span></p>
+                        <p><strong>对应地盘:</strong> ${renjiDipan} → <strong>地盘星司:</strong> ${renjiDipanStar} <span class="badge badge-secondary">${renjiDipanStarNumber}</span></p>
+                        <p><strong>推字计算:</strong> 在${renjiTianpanStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${renjiDipanStarNumber}位</p>
+                        <p><strong>人机推字:</strong> <span class="badge badge-warning text-dark">${renjiResult}</span></p>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        善司推字结果
+                    </div>
+                    <div class="card-body">
+                        <p><strong>善司计算:</strong> 刻(${currentKe})前一宫为${prevKe}，对冲宫为${shansiDipan}</p>
+                        <p><strong>善司地盘:</strong> ${shansiDipan} → <strong>地盘星司:</strong> ${shansiDipanStar} <span class="badge badge-secondary">${shansiDipanStarNumber}</span></p>
+                        <p><strong>对应天盘:</strong> ${shansiTianpan} → <strong>天盘星司:</strong> ${shansiTianpanStar} <span class="badge badge-primary">${shansiTianpanStarNumber}</span></p>
+                        <p><strong>推字计算:</strong> 在${shansiTianpanStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${shansiDipanStarNumber}位</p>
+                        <p><strong>善司推字:</strong> <span class="badge badge-primary">${shansiResult}</span></p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        值使推字结果
+                    </div>
+                    <div class="card-body">
+                        <p><strong>值使计算:</strong> 刻(${currentKe})后一宫为${nextKe}，对冲宫为${zhishiDipan}</p>
+                        <p><strong>值使地盘:</strong> ${zhishiDipan} → <strong>地盘星司:</strong> ${zhishiDipanStar} <span class="badge badge-secondary">${zhishiDipanStarNumber}</span></p>
+                        <p><strong>对应天盘:</strong> ${zhishiTianpan} → <strong>天盘星司:</strong> ${zhishiTianpanStar} <span class="badge badge-primary">${zhishiTianpanStarNumber}</span></p>
+                        <p><strong>推字计算:</strong> 在${zhishiTianpanStar}的推字表中${zhanType === "他占" ? "顺数" : "逆数"}第${zhishiDipanStarNumber}位</p>
+                        <p><strong>值使推字:</strong> <span class="badge badge-danger">${zhishiResult}</span></p>
                     </div>
                 </div>
             `;
