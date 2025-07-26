@@ -65,84 +65,134 @@
         </div>
     </div>
     
-    <!-- 4x4表格 -->
-    <div class="table-responsive mb-4" id="tianpan-table" style="display: none;">
-      <table class="table table-bordered table-fixed">
-        <tbody>
-          <tr>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-1-1"></div>
-              <div class="dz-label">巳</div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-1-2"></div>
-              <div class="dz-label">午</div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-1-3"></div>
-              <div class="dz-label">未</div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-1-4"></div>
-              <div class="dz-label">申</div>
-            </td>
-          </tr>
-          <tr>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-2-1"></div>
-              <div class="dz-label">辰</div>
-            </td>
-            <td class="cell-center empty">
-              <div class="tp-label" id="fill-2-2"></div>
-              <div class="dz-label"></div>
-            </td>
-            <td class="cell-center empty">
-              <div class="tp-label" id="fill-2-3"></div>
-              <div class="dz-label"></div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-2-4"></div>
-              <div class="dz-label">酉</div>
-            </td>
-          </tr>
-          <tr>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-3-1"></div>
-              <div class="dz-label">卯</div>
-            </td>
-            <td class="cell-center empty">
-              <div class="tp-label" id="fill-3-2"></div>
-              <div class="dz-label"></div>
-            </td>
-            <td class="cell-center empty">
-              <div class="tp-label" id="fill-3-3"></div>
-              <div class="dz-label"></div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-3-4"></div>
-              <div class="dz-label">戌</div>
-            </td>
-          </tr>
-          <tr>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-4-1"></div>
-              <div class="dz-label">寅</div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-4-2"></div>
-              <div class="dz-label">丑</div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-4-3"></div>
-              <div class="dz-label">子</div>
-            </td>
-            <td class="cell-center">
-              <div class="tp-label" id="fill-4-4"></div>
-              <div class="dz-label">亥</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- 天盘表格 -->
+    <div id="tianpan-table" style="display: none;">
+        <div class="card mb-3">
+            <div class="card-header">天地盘</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center tianpan-table">
+                        <tr>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-1-1"></div>
+                                <div class="dz-label">寅</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-1-2"></div>
+                                <div class="dz-label">卯</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-1-3"></div>
+                                <div class="dz-label">辰</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-1-4"></div>
+                                <div class="dz-label">巳</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-2-1"></div>
+                                <div class="dz-label">丑</div>
+                            </td>
+                            <td colspan="2" rowspan="2" class="center-cell bg-light">
+                                <div class="center-text">小阴符术</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-2-4"></div>
+                                <div class="dz-label">午</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-3-1"></div>
+                                <div class="dz-label">子</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-3-4"></div>
+                                <div class="dz-label">未</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-4-1"></div>
+                                <div class="dz-label">亥</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-4-2"></div>
+                                <div class="dz-label">戌</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-4-3"></div>
+                                <div class="dz-label">酉</div>
+                            </td>
+                            <td class="position-relative">
+                                <div class="tp-label" id="fill-4-4"></div>
+                                <div class="dz-label">申</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 添加机锋门和十将的卡片 -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-danger text-white">
+                        机锋
+                    </div>
+                    <div class="card-body">
+                        <p><span id="jifeng-tianpan-display">--</span>+<span id="jifeng-dipan-display">--</span></p>
+                        <p><span id="jifeng-tianpan-star">--</span>+<span id="jifeng-dipan-star">--</span></p>
+                        <p><span class="badge bg-danger" id="jifeng-result-display">--</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        十将
+                    </div>
+                    <div class="card-body">
+                        <p><span id="shijian-source-display">--</span>+<span id="shijian-target-display">--</span></p>
+                        <p><span class="badge bg-primary" id="shijian-result-display">--</span></p>
+                        <p class="small text-muted" id="shijian-explain-display">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 添加善司和值使的卡片 -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        善司
+                    </div>
+                    <div class="card-body">
+                        <p><span id="shansi-tianpan-display">--</span>+<span id="shansi-dipan-display">--</span></p>
+                        <p><span id="shansi-tianpan-star">--</span>+<span id="shansi-dipan-star">--</span></p>
+                        <p><span class="badge bg-primary" id="shansi-result-display">--</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white">
+                        值使
+                    </div>
+                    <div class="card-body">
+                        <p><span id="zhishi-tianpan-display">--</span>+<span id="zhishi-dipan-display">--</span></p>
+                        <p><span id="zhishi-tianpan-star">--</span>+<span id="zhishi-dipan-star">--</span></p>
+                        <p><span class="badge bg-secondary" id="zhishi-result-display">--</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 用神选择 -->
