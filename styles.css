@@ -23,11 +23,13 @@
 
 /* 天盘标签样式 - 上方 */
 .tp-label {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: bold;
     color: #d9534f;
     margin-bottom: 8px;
     min-height: 1.8em;
+    word-break: keep-all;
+    white-space: nowrap;
 }
 
 /* 表格边框加粗美化 */
@@ -254,7 +256,7 @@
     }
     
     .tp-label {
-        font-size: 1.1rem;
+        font-size: 1rem;
         margin-bottom: 2px;
     }
     
@@ -279,7 +281,7 @@
     }
     
     .tp-label {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         margin-bottom: 5px;
     }
     
