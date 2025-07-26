@@ -298,13 +298,15 @@ function calculateLiuheGong(ke) {
     return liuheMap[ke] || null;
 }
 
-// 从天干地支组合中提取地支部分
+// 从天干地支组合中提取地支
 function extractDizhi(ganzhiString) {
-    // 如果长度大于1，取最后一个字符作为地支
-    // 否则直接返回原字符串
-    return ganzhiString && ganzhiString.length > 1 ? 
-           ganzhiString.charAt(ganzhiString.length - 1) : 
-           ganzhiString;
+    // 如果输入不是有效字符串，则原样返回
+    if (!ganzhiString || typeof ganzhiString !== 'string') {
+        return ganzhiString;
+    }
+    
+    // 直接返回最后一个字符
+    return ganzhiString.charAt(ganzhiString.length - 1);
 }
 
 // 计算机锋门
@@ -2902,6 +2904,10 @@ function updateJifengMenCard() {
         
         // 获取天盘地支对应的星司
         const tianpanDizhi = extractDizhi(jifengResult.tianpan);
+        
+        console.log(`机锋门天盘原值: ${jifengResult.tianpan}`);
+        console.log(`机锋门天盘地支: ${tianpanDizhi}`);
+        
         const now = new Date();
         const hour = now.getHours();
         const minute = now.getMinutes();
@@ -2912,8 +2918,8 @@ function updateJifengMenCard() {
         // 计算推字
         const tuiziResult = calculateTuizi();
         
-        // 更新机锋门卡片内容
-        tianpanElement.textContent = jifengResult.tianpan;
+        // 强制直接使用地支，不使用tianpanDizhi变量
+        tianpanElement.textContent = jifengResult.tianpan.charAt(jifengResult.tianpan.length - 1);
         dipanElement.textContent = jifengResult.dipan;
         
         tianpanStarElement.textContent = tianpanXingsi ? tianpanXingsi.star : "--";
@@ -3032,6 +3038,8 @@ function updateShansiCard() {
         const minute = now.getMinutes();
         
         const tianpanDizhi = extractDizhi(shansiTianpan);
+        console.log(`善司天盘原值: ${shansiTianpan}, 地支: ${tianpanDizhi}`);
+        
         const tianpanXingsi = getXingsiForDiZhi(tianpanDizhi);
         const dipanXingsi = getXingsiForDiZhi(shansiDipan);
         
@@ -3064,8 +3072,8 @@ function updateShansiCard() {
             }
         }
         
-        // 更新善司卡片内容
-        tianpanElement.textContent = shansiTianpan;
+        // 更新善司卡片内容 - 确保只显示地支
+        tianpanElement.textContent = tianpanDizhi;
         dipanElement.textContent = shansiDipan;
         
         tianpanStarElement.textContent = tianpanXingsi ? tianpanXingsi.star : "--";
@@ -3125,6 +3133,8 @@ function updateZhishiCard() {
         const minute = now.getMinutes();
         
         const tianpanDizhi = extractDizhi(zhishiTianpan);
+        console.log(`值使天盘原值: ${zhishiTianpan}, 地支: ${tianpanDizhi}`);
+        
         const tianpanXingsi = getXingsiForDiZhi(tianpanDizhi);
         const dipanXingsi = getXingsiForDiZhi(zhishiDipan);
         
@@ -3157,8 +3167,8 @@ function updateZhishiCard() {
             }
         }
         
-        // 更新值使卡片内容
-        tianpanElement.textContent = zhishiTianpan;
+        // 更新值使卡片内容 - 确保只显示地支
+        tianpanElement.textContent = tianpanDizhi;
         dipanElement.textContent = zhishiDipan;
         
         tianpanStarElement.textContent = tianpanXingsi ? tianpanXingsi.star : "--";
@@ -3184,14 +3194,14 @@ function findTianpanValueForDipan(targetDipan) {
                 const cell = document.getElementById(cellId);
                 
                 if (cell) {
-                    // 获取单元格内容
+                    // 获取单元格内容（天盘值）
                     const tianpan = cell.textContent;
                     
                     // 获取地盘值
                     const dizhiCell = cell.closest('td').querySelector('.dz-label');
                     if (dizhiCell && dizhiCell.textContent === targetDipan) {
                         console.log(`在单元格${cellId}找到地盘${targetDipan}对应的天盘值: ${tianpan}`);
-                        return tianpan;
+                        return tianpan;  // 返回完整天盘值（包含天干地支）
                     }
                 }
             }
