@@ -2032,7 +2032,7 @@ function calculateYongShen() {
         const dizhiStarNumber = xingsiNumberMap[dizhiStar] || 0;
         
         // 计算天机推字结果
-        const tianjiResult = calculateTuiziForYongShen(dizhiStar, tianpanStarNumber);
+        const tianjiResult = calculateTuiziForYongShen(tianpanStar, dizhiStarNumber);
         
         // 计算地机（天机对冲宫）
         const dijiGong = getOppositeGong(selectedYongShen);
@@ -2066,11 +2066,11 @@ function calculateYongShen() {
         
         const dijiTianpanStarNumber = xingsiNumberMap[dijiTianpanStar] || 0;
         console.log(`地机天盘星司: ${dijiTianpanStar}(${dijiTianpanStarNumber})`);
-
+        
         // 计算地机推字结果
         const dijiResult = calculateTuiziForYongShen(dijiTianpanStar, dizhiStarNumber);
         console.log(`地机推字结果: ${dijiResult}`);
-
+        
         // 计算人机（天盘下拉框所选的天盘位置）
         const tianpanSelect = document.getElementById('tianpan');
         let selectedTianpan = "";
@@ -2149,6 +2149,12 @@ function calculateYongShen() {
         // 计算人机推字结果
         const renjiResult = calculateTuiziForYongShen(renjiTianpanStar, renjiDipanStarNumber);
         
+        // 注意：二层盘、人气、天气、地气的计算现在都在showErcengpan函数中
+        
+        // 天气和地气的计算已移至showErcengpan函数中
+        
+        // 地气的计算已移至showErcengpan函数中
+        
         // 获取当前刻
         const currentKe = getCurrentKe();
         console.log(`当前刻: ${currentKe}`);
@@ -2186,14 +2192,14 @@ function calculateYongShen() {
             jifengResult = calculateTuiziForYongShen(jifengTianpanStar, jifengDipanStarNumber);
         }
         
-        // 计算善司（刻前一宫）
+        // 计算善司（刻前一宫，逆时针方向）
         const keIndex = getBranchIndex(currentKe);
         const prevKeIndex = (keIndex - 1 + 12) % 12;
         const prevKe = getBranchByIndex(prevKeIndex);
-        console.log(`刻前一宫: ${prevKe}`);
+        console.log(`刻前一宫(逆时针): ${prevKe}`);
         
-        // 找到善司地盘位置
-        const shansiDipan = getOppositeGong(prevKe);
+        // 善司地盘位置就是刻前一宫（不再用对冲宫）
+        const shansiDipan = prevKe;
         console.log(`善司地盘: ${shansiDipan}`);
         
         // 计算善司对应的天盘
@@ -2235,13 +2241,13 @@ function calculateYongShen() {
         // 计算善司推字结果
         const shansiResult = calculateTuiziForYongShen(shansiTianpanStar, shansiDipanStarNumber);
         
-        // 计算值使（刻后一宫）
+        // 计算值使（刻后一宫，顺时针方向）
         const nextKeIndex = (keIndex + 1) % 12;
         const nextKe = getBranchByIndex(nextKeIndex);
-        console.log(`刻后一宫: ${nextKe}`);
+        console.log(`刻后一宫(顺时针): ${nextKe}`);
         
-        // 找到值使地盘位置
-        const zhishiDipan = getOppositeGong(nextKe);
+        // 值使地盘位置就是刻后一宫（不再用对冲宫）
+        const zhishiDipan = nextKe;
         console.log(`值使地盘: ${zhishiDipan}`);
         
         // 计算值使对应的天盘
@@ -2321,8 +2327,8 @@ function calculateYongShen() {
                 </div>
                 
                 <div class="row">
-                    <div class="col-12 mb-3">
-                        <div class="card">
+                    <div class="col-md-12 mb-3">
+                        <div class="card h-100">
                             <div class="card-header bg-warning text-dark">
                                 人机
                             </div>
@@ -2336,15 +2342,20 @@ function calculateYongShen() {
                 </div>
                 
                 <div class="row">
-                    <div class="col-12 mb-3 text-center">
-                        <button class="btn btn-secondary" id="ercengpan-btn">二层盘</button>
-                        <div id="ercengpan-container" class="mt-3" style="display: none;"></div>
+                    <div class="col-md-12 mb-3 text-center">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                二层盘
+                            </div>
+                            <div class="card-body text-center">
+                                <button class="btn btn-outline-primary" id="ercengpan-btn">显示二层盘</button>
+                                <p class="small text-muted mt-2">点击按钮查看二层盘并计算人气、天气、地气</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="small text-muted mb-3">
-                    二层盘说明：以<span class="fw-bold">${tianpanDizhi}</span>为天机的天盘，<span class="fw-bold">${dijiGong}</span>为地机的地盘，按逆时针排列
-                </div>
+                <div id="ercengpan-container" class="mt-3" style="display: none;"></div>
                 
                 <div class="small text-muted mt-3">
                     <p>占卜类型: ${zhanType}</p>
@@ -2387,6 +2398,16 @@ function showErcengpan(tianpanMap) {
         return;
     }
     
+    // 获取用神选择
+    const yongshenSelect = document.getElementById("yongshen-select");
+    if (!yongshenSelect || !yongshenSelect.value) {
+        container.innerHTML = `<div class="alert alert-warning">请先选择用神</div>`;
+        return;
+    }
+    
+    const selectedYongShen = yongshenSelect.value;
+    console.log(`二层盘用神: ${selectedYongShen}`);
+    
     // 定义地盘布局
     const dipanLayout = [
         ["巳", "午", "未", "申"],
@@ -2396,14 +2417,6 @@ function showErcengpan(tianpanMap) {
     ];
     
     // 查找天机的天盘值和地机宫位
-    const yongshenSelect = document.getElementById("yongshen-select");
-    if (!yongshenSelect || !yongshenSelect.value) {
-        console.error("未选择用神，无法获取天机和地机");
-        container.innerHTML = `<div class="alert alert-warning">请先选择用神</div>`;
-        return;
-    }
-    
-    const selectedYongShen = yongshenSelect.value;
     // 获取天机的天盘值
     const tianjiTianpan = tianpanMap[selectedYongShen];
     if (!tianjiTianpan || tianjiTianpan === "无") {
@@ -2429,15 +2442,20 @@ function showErcengpan(tianpanMap) {
         return;
     }
     
-    // 创建天盘排列映射
-    const tianpanOrder = {};
+    // 找到地机宫位在branches中的索引
+    const dijiGongIndex = branches.indexOf(dijiGong);
+    if (dijiGongIndex === -1) {
+        console.error(`地机宫位 ${dijiGong} 不是有效的地支`);
+        container.innerHTML = `<div class="alert alert-warning">无法计算二层盘：地机宫位 ${dijiGong} 不是有效的地支</div>`;
+        return;
+    }
+    
+    // 创建二层盘映射（地盘->天盘）
+    const ercengPanMap = {};
     
     // 首先，将天机的天盘放在地机的地盘位置上
-    tianpanOrder[dijiGong] = tianpanDizhi;
-    console.log(`将天机的天盘 ${tianpanDizhi} 放在地机的地盘 ${dijiGong} 位置上`);
-    
-    // 找到地机宫位在地支数组中的索引
-    const dijiGongIndex = branches.indexOf(dijiGong);
+    ercengPanMap[dijiGong] = tianpanDizhi;
+    console.log(`二层盘：将天机的天盘 ${tianpanDizhi} 放在地机的地盘 ${dijiGong} 位置上`);
     
     // 然后从天盘地支开始，逆时针排列其余天盘
     for (let i = 1; i < 12; i++) {
@@ -2450,11 +2468,9 @@ function showErcengpan(tianpanMap) {
         const tianpanValue = branches[tianpanIndex];
         
         // 设置地盘到天盘的映射
-        tianpanOrder[dipanBranch] = tianpanValue;
-        console.log(`地盘 ${dipanBranch} -> 天盘 ${tianpanValue}`);
+        ercengPanMap[dipanBranch] = tianpanValue;
+        console.log(`二层盘：地盘 ${dipanBranch} -> 天盘 ${tianpanValue}`);
     }
-    
-    console.log("二层盘天盘排列映射:", tianpanOrder);
     
     // 创建二层盘表格
     let tableHtml = `
@@ -2479,7 +2495,7 @@ function showErcengpan(tianpanMap) {
                 }
             } else {
                 // 获取这个地支对应的天盘值
-                const tianpanValue = tianpanOrder[dizhiValue] || "无";
+                const tianpanValue = ercengPanMap[dizhiValue] || "无";
                 
                 // 突出显示天机的天盘和地机的地盘
                 let specialClass = "";
@@ -2499,6 +2515,160 @@ function showErcengpan(tianpanMap) {
     
     tableHtml += '</table></div>';
     tableHtml += '<div class="small text-muted mt-2">注：蓝色背景表示天机的天盘放在地机的地盘位置上</div>';
+    
+    // 获取当前时间
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    
+    // 计算人气、天气、地气
+    // ----- 人气卡片（基于二层盘） -----
+    console.log("计算人气（基于二层盘）...");
+    // 人气 = 天机天盘 + 地机地盘（在二层盘中，天机天盘已经放在了地机地盘位置上）
+    const renqiTianpan = tianpanDizhi;  // 天机的天盘
+    const renqiDipan = dijiGong;        // 地机的地盘
+    
+    // 计算人气天盘星司
+    const renqiTianpanPart = getBranchPartByTime(renqiTianpan, hour, minute);
+    const renqiTianpanKey = `${renqiTianpan}-${renqiTianpanPart}`;
+    const renqiTianpanStar = xingsiNames[renqiTianpanKey];
+    const renqiTianpanStarNumber = xingsiNumberMap[renqiTianpanStar] || 0;
+    console.log(`人气天盘星司: ${renqiTianpanStar}(${renqiTianpanStarNumber})`);
+    
+    // 计算人气地盘星司
+    const renqiDipanPart = getBranchPartByTime(renqiDipan, hour, minute);
+    const renqiDipanKey = `${renqiDipan}-${renqiDipanPart}`;
+    const renqiDipanStar = xingsiNames[renqiDipanKey];
+    const renqiDipanStarNumber = xingsiNumberMap[renqiDipanStar] || 0;
+    console.log(`人气地盘星司: ${renqiDipanStar}(${renqiDipanStarNumber})`);
+    
+    // 计算人气推字结果
+    const renqiResult = calculateTuiziForYongShen(renqiTianpanStar, renqiDipanStarNumber);
+    console.log(`人气推字结果: ${renqiResult}`);
+
+    // ----- 天气卡片（基于二层盘） -----
+    console.log("计算天气（基于二层盘）...");
+    // 天气 = 天盘为用神 + 天盘为用神对应的地盘
+    const tianqiTianpan = selectedYongShen;  // 用神本身作为天盘
+    
+    // 找到二层盘中天盘为用神的地盘位置
+    let tianqiDipan = null;
+    for (const [dipan, tianpan] of Object.entries(ercengPanMap)) {
+        if (tianpan === selectedYongShen) {
+            tianqiDipan = dipan;
+            break;
+        }
+    }
+    
+    // 如果找不到天盘为用神的地盘位置
+    if (!tianqiDipan) {
+        console.error(`在二层盘中未找到天盘为${selectedYongShen}的地盘位置`);
+        tianqiDipan = "未知";
+    }
+    
+    console.log(`天气（二层盘）: 天盘=${tianqiTianpan}, 地盘=${tianqiDipan}`);
+    
+    // 计算天气天盘星司
+    const tianqiTianpanPart = getBranchPartByTime(tianqiTianpan, hour, minute);
+    const tianqiTianpanKey = `${tianqiTianpan}-${tianqiTianpanPart}`;
+    const tianqiTianpanStar = xingsiNames[tianqiTianpanKey];
+    const tianqiTianpanStarNumber = xingsiNumberMap[tianqiTianpanStar] || 0;
+    console.log(`天气天盘星司: ${tianqiTianpanStar}(${tianqiTianpanStarNumber})`);
+    
+    // 计算天气地盘星司
+    const tianqiDipanPart = getBranchPartByTime(tianqiDipan, hour, minute);
+    const tianqiDipanKey = `${tianqiDipan}-${tianqiDipanPart}`;
+    const tianqiDipanStar = xingsiNames[tianqiDipanKey];
+    const tianqiDipanStarNumber = xingsiNumberMap[tianqiDipanStar] || 0;
+    console.log(`天气地盘星司: ${tianqiDipanStar}(${tianqiDipanStarNumber})`);
+    
+    // 计算天气推字结果
+    const tianqiResult = calculateTuiziForYongShen(tianqiTianpanStar, tianqiDipanStarNumber);
+    console.log(`天气推字结果: ${tianqiResult}`);
+
+    // ----- 地气卡片（基于二层盘） -----
+    console.log("计算地气（基于二层盘）...");
+    // 地气 = 地盘为用神对应的天盘 + 地盘为用神
+    const diqiTianpan = ercengPanMap[selectedYongShen]; // 二层盘中地盘为用神对应的天盘
+    const diqiDipan = selectedYongShen;                 // 用神本身作为地盘
+    
+    console.log(`地气（二层盘）: 天盘=${diqiTianpan}, 地盘=${diqiDipan}`);
+    
+    // 计算地气天盘星司
+    const diqiTianpanPart = getBranchPartByTime(diqiTianpan, hour, minute);
+    const diqiTianpanKey = `${diqiTianpan}-${diqiTianpanPart}`;
+    const diqiTianpanStar = xingsiNames[diqiTianpanKey];
+    const diqiTianpanStarNumber = xingsiNumberMap[diqiTianpanStar] || 0;
+    console.log(`地气天盘星司: ${diqiTianpanStar}(${diqiTianpanStarNumber})`);
+    
+    // 计算地气地盘星司
+    const diqiDipanPart = getBranchPartByTime(diqiDipan, hour, minute);
+    const diqiDipanKey = `${diqiDipan}-${diqiDipanPart}`;
+    const diqiDipanStar = xingsiNames[diqiDipanKey];
+    const diqiDipanStarNumber = xingsiNumberMap[diqiDipanStar] || 0;
+    console.log(`地气地盘星司: ${diqiDipanStar}(${diqiDipanStarNumber})`);
+    
+    // 计算地气推字结果
+    const diqiResult = calculateTuiziForYongShen(diqiTianpanStar, diqiDipanStarNumber);
+    console.log(`地气推字结果: ${diqiResult}`);
+    
+    // 获取占卜类型（他占/自占）
+    const taZhanRadio = document.getElementById("taZhan");
+    const isForOthers = taZhanRadio && taZhanRadio.checked;
+    const zhanType = isForOthers ? "他占" : "自占";
+    
+    // 添加人气、天气、地气卡片
+    tableHtml += `
+    <div class="row mt-4">
+        <h4>二层盘分析</h4>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    人气
+                </div>
+                <div class="card-body">
+                    <p>${renqiTianpan}+${renqiDipan}</p>
+                    <p>${renqiTianpanStar}+${renqiDipanStar}</p>
+                    <p><span class="badge bg-danger">${renqiResult}</span></p>
+                    <p class="small text-muted">天机天盘+地机地盘（二层盘中两者重合）</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    天气
+                </div>
+                <div class="card-body">
+                    <p>${tianqiTianpan}+${tianqiDipan}</p>
+                    <p>${tianqiTianpanStar}+${tianqiDipanStar}</p>
+                    <p><span class="badge bg-success">${tianqiResult}</span></p>
+                    <p class="small text-muted">天盘为用神+该天盘对应的地盘（基于二层盘）</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    地气
+                </div>
+                <div class="card-body">
+                    <p>${diqiTianpan}+${diqiDipan}</p>
+                    <p>${diqiTianpanStar}+${diqiDipanStar}</p>
+                    <p><span class="badge bg-info">${diqiResult}</span></p>
+                    <p class="small text-muted">用神地盘对应的天盘+用神地盘（基于二层盘）</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="small text-muted mt-3">
+        <p>占卜类型: ${zhanType}</p>
+        <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
+    </div>
+    `;
     
     container.innerHTML = tableHtml;
     console.log("二层盘显示完成");
@@ -2883,8 +3053,9 @@ function updateYongshenCard(yongshen) {
         const yongshenRelations = document.getElementById('yongshen-relations');
         const yongshenAnalysis = document.getElementById('yongshen-analysis');
         
+        // 如果卡片元素不存在，可能是我们没有创建这些元素，直接返回不执行后续代码
         if (!yongshenCard || !yongshenInfo || !yongshenRelations || !yongshenAnalysis) {
-            console.error("未找到用神卡片元素");
+            console.log("用神分析卡片元素不存在，跳过更新");
             return;
         }
         
@@ -3001,7 +3172,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (selectedYongShen) {
                 calculateYongShen();
-                updateYongshenCard(selectedYongShen);
+                // 注释掉这行，因为对应的HTML元素可能不存在
+                // updateYongshenCard(selectedYongShen);
             } else {
                 alert("请先选择用神");
             }
@@ -3157,14 +3329,14 @@ function updateShansiCard() {
         const currentKe = getCurrentKe();
         console.log(`当前刻: ${currentKe}`);
         
-        // 计算善司（刻前一宫）
+        // 计算善司（刻前一宫，逆时针方向）
         const keIndex = getBranchIndex(currentKe);
         const prevKeIndex = (keIndex - 1 + 12) % 12;
         const prevKe = getBranchByIndex(prevKeIndex);
-        console.log(`刻前一宫: ${prevKe}`);
+        console.log(`刻前一宫(逆时针): ${prevKe}`);
         
-        // 找到善司地盘位置
-        const shansiDipan = getOppositeGong(prevKe);
+        // 善司地盘位置就是刻前一宫（不再用对冲宫）
+        const shansiDipan = prevKe;
         console.log(`善司地盘: ${shansiDipan}`);
         
         // 获取善司卡片元素
@@ -3252,14 +3424,14 @@ function updateZhishiCard() {
         const currentKe = getCurrentKe();
         console.log(`当前刻: ${currentKe}`);
         
-        // 计算值使（刻后一宫）
+        // 计算值使（刻后一宫，顺时针方向）
         const keIndex = getBranchIndex(currentKe);
         const nextKeIndex = (keIndex + 1) % 12;
         const nextKe = getBranchByIndex(nextKeIndex);
-        console.log(`刻后一宫: ${nextKe}`);
+        console.log(`刻后一宫(顺时针): ${nextKe}`);
         
-        // 找到值使地盘位置
-        const zhishiDipan = getOppositeGong(nextKe);
+        // 值使地盘位置就是刻后一宫（不再用对冲宫）
+        const zhishiDipan = nextKe;
         console.log(`值使地盘: ${zhishiDipan}`);
         
         // 获取值使卡片元素
