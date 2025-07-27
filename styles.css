@@ -362,8 +362,9 @@
 
 /* 天机地机人机卡片样式 */
 #yongshen-result .card {
+    margin-bottom: 10px;
+    border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
 }
 
 #yongshen-result .card-header.bg-success {
@@ -384,4 +385,32 @@
 
 #yongshen-result .card-header.bg-danger {
     background-color: #dc3545 !important;
+} 
+
+/* 二层盘样式 */
+.ercengpan-table {
+    max-width: 500px;
+    margin: 0 auto;
+    table-layout: fixed;
+}
+
+.ercengpan-table td {
+    width: 25%;
+    height: 80px;
+    padding: 5px;
+    text-align: center;
+    position: relative;
+}
+
+.ercengpan-table .center-cell {
+    vertical-align: middle;
+}
+
+.ercengpan-table .center-text {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+#ercengpan-container {
+    transition: all 0.3s ease;
 } 

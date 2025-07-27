@@ -2335,17 +2335,173 @@ function calculateYongShen() {
                     </div>
                 </div>
                 
+                <div class="row">
+                    <div class="col-12 mb-3 text-center">
+                        <button class="btn btn-secondary" id="ercengpan-btn">二层盘</button>
+                        <div id="ercengpan-container" class="mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <div class="small text-muted mb-3">
+                    二层盘说明：以<span class="fw-bold">${tianpanDizhi}</span>为天机的天盘，<span class="fw-bold">${dijiGong}</span>为地机的地盘，按逆时针排列
+                </div>
+                
                 <div class="small text-muted mt-3">
                     <p>占卜类型: ${zhanType}</p>
                     <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
                 </div>
             `;
+            
+            // 添加二层盘按钮的点击事件
+            const ercengpanBtn = document.getElementById("ercengpan-btn");
+            if (ercengpanBtn) {
+                ercengpanBtn.addEventListener("click", function() {
+                    showErcengpan(tianpanMap);
+                });
+                console.log("二层盘按钮事件已绑定");
+            }
         }
         
         console.log("用神计算完成");
     } catch (error) {
         console.error("计算用神时出错:", error);
     }
+}
+
+// 显示二层盘
+function showErcengpan(tianpanMap) {
+    console.log("显示二层盘...");
+    
+    // 获取容器元素
+    const container = document.getElementById("ercengpan-container");
+    if (!container) {
+        console.error("未找到二层盘容器元素");
+        return;
+    }
+    
+    // 切换显示状态
+    if (container.style.display === "none") {
+        container.style.display = "block";
+    } else {
+        container.style.display = "none";
+        return;
+    }
+    
+    // 定义地盘布局
+    const dipanLayout = [
+        ["巳", "午", "未", "申"],
+        ["辰", "空", "空", "酉"],
+        ["卯", "空", "空", "戌"],
+        ["寅", "丑", "子", "亥"]
+    ];
+    
+    // 查找天机的天盘值和地机宫位
+    const yongshenSelect = document.getElementById("yongshen-select");
+    if (!yongshenSelect || !yongshenSelect.value) {
+        console.error("未选择用神，无法获取天机和地机");
+        container.innerHTML = `<div class="alert alert-warning">请先选择用神</div>`;
+        return;
+    }
+    
+    const selectedYongShen = yongshenSelect.value;
+    // 获取天机的天盘值
+    const tianjiTianpan = tianpanMap[selectedYongShen];
+    if (!tianjiTianpan || tianjiTianpan === "无") {
+        console.error("天机的天盘无效");
+        container.innerHTML = `<div class="alert alert-warning">天机的天盘无效</div>`;
+        return;
+    }
+    const tianpanDizhi = extractDizhi(tianjiTianpan);
+    
+    // 计算地机宫位
+    const dijiGong = getOppositeGong(selectedYongShen);
+    
+    console.log(`用神: ${selectedYongShen}, 天机的天盘: ${tianpanDizhi}, 地机宫位: ${dijiGong}`);
+    
+    // 创建天盘排列
+    const branches = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    
+    // 找到天机天盘在branches中的索引
+    const tianpanDizhiIndex = branches.indexOf(tianpanDizhi);
+    if (tianpanDizhiIndex === -1) {
+        console.error(`天机天盘 ${tianpanDizhi} 不是有效的地支`);
+        container.innerHTML = `<div class="alert alert-warning">无法计算二层盘：天机天盘 ${tianpanDizhi} 不是有效的地支</div>`;
+        return;
+    }
+    
+    // 创建天盘排列映射
+    const tianpanOrder = {};
+    
+    // 首先，将天机的天盘放在地机的地盘位置上
+    tianpanOrder[dijiGong] = tianpanDizhi;
+    console.log(`将天机的天盘 ${tianpanDizhi} 放在地机的地盘 ${dijiGong} 位置上`);
+    
+    // 找到地机宫位在地支数组中的索引
+    const dijiGongIndex = branches.indexOf(dijiGong);
+    
+    // 然后从天盘地支开始，逆时针排列其余天盘
+    for (let i = 1; i < 12; i++) {
+        // 计算地支在地盘中的位置（逆时针+1）
+        const dipanIndex = (dijiGongIndex + i) % 12;
+        const dipanBranch = branches[dipanIndex];
+        
+        // 计算对应的天盘值（逆时针+1）
+        const tianpanIndex = (tianpanDizhiIndex + i) % 12;
+        const tianpanValue = branches[tianpanIndex];
+        
+        // 设置地盘到天盘的映射
+        tianpanOrder[dipanBranch] = tianpanValue;
+        console.log(`地盘 ${dipanBranch} -> 天盘 ${tianpanValue}`);
+    }
+    
+    console.log("二层盘天盘排列映射:", tianpanOrder);
+    
+    // 创建二层盘表格
+    let tableHtml = `
+    <div class="mb-3 alert alert-success">
+        二层盘：天机的天盘${tianpanDizhi}放在地机的地盘${dijiGong}位置上，然后逆时针排列
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered text-center ercengpan-table">
+    `;
+    
+    for (let row = 0; row < 4; row++) {
+        tableHtml += '<tr>';
+        
+        for (let col = 0; col < 4; col++) {
+            const dizhiValue = dipanLayout[row][col];
+            
+            if (dizhiValue === "空") {
+                if (row === 1 && col === 1) {
+                    tableHtml += '<td colspan="2" rowspan="2" class="center-cell bg-light">';
+                    tableHtml += '<div class="center-text">二层盘</div>';
+                    tableHtml += '</td>';
+                }
+            } else {
+                // 获取这个地支对应的天盘值
+                const tianpanValue = tianpanOrder[dizhiValue] || "无";
+                
+                // 突出显示天机的天盘和地机的地盘
+                let specialClass = "";
+                if (dizhiValue === dijiGong && tianpanValue === tianpanDizhi) {
+                    specialClass = "bg-primary text-white"; // 天机天盘放在地机地盘的位置
+                }
+                
+                tableHtml += `<td class="position-relative ${specialClass}">`;
+                tableHtml += `<div class="tp-label">${tianpanValue}</div>`;
+                tableHtml += `<div class="dz-label">${dizhiValue}</div>`;
+                tableHtml += '</td>';
+            }
+        }
+        
+        tableHtml += '</tr>';
+    }
+    
+    tableHtml += '</table></div>';
+    tableHtml += '<div class="small text-muted mt-2">注：蓝色背景表示天机的天盘放在地机的地盘位置上</div>';
+    
+    container.innerHTML = tableHtml;
+    console.log("二层盘显示完成");
 }
 
 // 用神推字计算
