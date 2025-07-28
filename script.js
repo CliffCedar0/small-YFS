@@ -3518,7 +3518,7 @@ function showSancengpan(tianpanMap) {
     // 人气地盘位置索引
     const renqiDipanIndex = branches.indexOf(renqiDipan);
     
-    // 然后从天气天盘开始，按照小阴符术规则真正的逆时针排列其余天盘
+    // 然后从天气天盘开始，按照小阴符规则真正的逆时针排列其余天盘
     for (let i = 1; i < 12; i++) {
         // 计算地支在地盘中的位置（正向顺序+i）
         const dipanIndex = (renqiDipanIndex + i) % 12;
@@ -3687,6 +3687,109 @@ function showSancengpan(tianpanMap) {
     const renDaoResult = calculateTuiziForYongShen(renDaoTianpanStar, renDaoDipanStarNumber);
     console.log(`人盗推字结果: ${renDaoResult}`);
     
+    // 计算十贼
+    console.log("计算十贼...");
+    
+    // 以人盗为核心
+    const renDaoDipanIndex = getBranchIndex(renDaoDipan);
+    console.log(`人盗地盘索引: ${renDaoDipanIndex}`);
+    
+    // 计算天命贼：顺时针下一个宫位的地盘
+    const tianmingZeIndex = (renDaoDipanIndex + 1) % 12;
+    const tianmingZeDipan = getBranchByIndex(tianmingZeIndex);
+    const tianmingZeTianpan = sancengPanMap[tianmingZeDipan];
+    console.log(`天命贼: 天盘=${tianmingZeTianpan}, 地盘=${tianmingZeDipan}`);
+    
+    // 计算天物贼：逆时针下两个宫位的地盘
+    const tianwuZeIndex = (renDaoDipanIndex - 2 + 12) % 12;
+    const tianwuZeDipan = getBranchByIndex(tianwuZeIndex);
+    const tianwuZeTianpan = sancengPanMap[tianwuZeDipan];
+    console.log(`天物贼: 天盘=${tianwuZeTianpan}, 地盘=${tianwuZeDipan}`);
+    
+    // 计算天时贼：顺时针下三个宫位的地盘
+    const tianshiZeIndex = (renDaoDipanIndex + 3) % 12;
+    const tianshiZeDipan = getBranchByIndex(tianshiZeIndex);
+    const tianshiZeTianpan = sancengPanMap[tianshiZeDipan];
+    console.log(`天时贼: 天盘=${tianshiZeTianpan}, 地盘=${tianshiZeDipan}`);
+    
+    // 计算天功贼：逆时针下四个宫位的地盘
+    const tiangongZeIndex = (renDaoDipanIndex - 4 + 12) % 12;
+    const tiangongZeDipan = getBranchByIndex(tiangongZeIndex);
+    const tiangongZeTianpan = sancengPanMap[tiangongZeDipan];
+    console.log(`天功贼: 天盘=${tiangongZeTianpan}, 地盘=${tiangongZeDipan}`);
+    
+    // 计算天神贼：顺时针下五个宫位的地盘
+    const tianshenZeIndex = (renDaoDipanIndex + 5) % 12;
+    const tianshenZeDipan = getBranchByIndex(tianshenZeIndex);
+    const tianshenZeTianpan = sancengPanMap[tianshenZeDipan];
+    console.log(`天神贼: 天盘=${tianshenZeTianpan}, 地盘=${tianshenZeDipan}`);
+    
+    // 计算地命贼：顺时针下六个宫位的天盘
+    const dimingZeIndex = (renDaoDipanIndex + 6) % 12;
+    const dimingZeDipan = getBranchByIndex(dimingZeIndex);
+    const dimingZeTianpan = sancengPanMap[dimingZeDipan];
+    console.log(`地命贼: 天盘=${dimingZeTianpan}, 地盘=${dimingZeDipan}`);
+    
+    // 计算地物贼：逆时针下七个宫位的天盘
+    const diwuZeIndex = (renDaoDipanIndex - 7 + 12) % 12;
+    const diwuZeDipan = getBranchByIndex(diwuZeIndex);
+    const diwuZeTianpan = sancengPanMap[diwuZeDipan];
+    console.log(`地物贼: 天盘=${diwuZeTianpan}, 地盘=${diwuZeDipan}`);
+    
+    // 计算地时贼：顺时针下八个宫位的天盘
+    const dishiZeIndex = (renDaoDipanIndex + 8) % 12;
+    const dishiZeDipan = getBranchByIndex(dishiZeIndex);
+    const dishiZeTianpan = sancengPanMap[dishiZeDipan];
+    console.log(`地时贼: 天盘=${dishiZeTianpan}, 地盘=${dishiZeDipan}`);
+    
+    // 计算地功贼：逆时针下九个宫位的天盘
+    const digongZeIndex = (renDaoDipanIndex - 9 + 12) % 12;
+    const digongZeDipan = getBranchByIndex(digongZeIndex);
+    const digongZeTianpan = sancengPanMap[digongZeDipan];
+    console.log(`地功贼: 天盘=${digongZeTianpan}, 地盘=${digongZeDipan}`);
+    
+    // 计算地神贼：顺时针下十个宫位的天盘
+    const dishenZeIndex = (renDaoDipanIndex + 10) % 12;
+    const dishenZeDipan = getBranchByIndex(dishenZeIndex);
+    const dishenZeTianpan = sancengPanMap[dishenZeDipan];
+    console.log(`地神贼: 天盘=${dishenZeTianpan}, 地盘=${dishenZeDipan}`);
+    
+    // 计算星司和推字
+    function calculateStarAndTuizi(tianpan, dipan) {
+        // 计算天盘星司
+        const tianpanPart = getBranchPartByTime(tianpan, hour, minute);
+        const tianpanKey = `${tianpan}-${tianpanPart}`;
+        const tianpanStar = xingsiNames[tianpanKey];
+        const tianpanStarNumber = xingsiNumberMap[tianpanStar] || 0;
+        
+        // 计算地盘星司
+        const dipanPart = getBranchPartByTime(dipan, hour, minute);
+        const dipanKey = `${dipan}-${dipanPart}`;
+        const dipanStar = xingsiNames[dipanKey];
+        const dipanStarNumber = xingsiNumberMap[dipanStar] || 0;
+        
+        // 计算推字结果
+        const tuiziResult = calculateTuiziForYongShen(tianpanStar, dipanStarNumber);
+        
+        return {
+            tianpanStar,
+            dipanStar,
+            tuiziResult
+        };
+    }
+    
+    // 计算所有贼的星司和推字
+    const tianmingZeCalc = calculateStarAndTuizi(tianmingZeTianpan, tianmingZeDipan);
+    const tianwuZeCalc = calculateStarAndTuizi(tianwuZeTianpan, tianwuZeDipan);
+    const tianshiZeCalc = calculateStarAndTuizi(tianshiZeTianpan, tianshiZeDipan);
+    const tiangongZeCalc = calculateStarAndTuizi(tiangongZeTianpan, tiangongZeDipan);
+    const tianshenZeCalc = calculateStarAndTuizi(tianshenZeTianpan, tianshenZeDipan);
+    const dimingZeCalc = calculateStarAndTuizi(dimingZeTianpan, dimingZeDipan);
+    const diwuZeCalc = calculateStarAndTuizi(diwuZeTianpan, diwuZeDipan);
+    const dishiZeCalc = calculateStarAndTuizi(dishiZeTianpan, dishiZeDipan);
+    const digongZeCalc = calculateStarAndTuizi(digongZeTianpan, digongZeDipan);
+    const dishenZeCalc = calculateStarAndTuizi(dishenZeTianpan, dishenZeDipan);
+    
     // 添加三个盗的卡片
     tableHtml += `
     <div class="row mt-4">
@@ -3729,6 +3832,154 @@ function showSancengpan(tianpanMap) {
                     <p>${renDaoTianpanStar}+${renDaoDipanStar}</p>
                     <p><span class="badge bg-primary">${renDaoResult}</span></p>
                     <p class="small text-muted">下拉框选择的天盘在三层盘中的位置</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <h5 class="mt-4">十贼（以人盗为核心）</h5>
+    
+    <!-- 第一行五个贼 -->
+    <div class="row mb-3">
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    天命贼
+                </div>
+                <div class="card-body">
+                    <p>${tianmingZeTianpan}+${tianmingZeDipan}</p>
+                    <p>${tianmingZeCalc.tianpanStar}+${tianmingZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-info">${tianmingZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">顺时针下一宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    天物贼
+                </div>
+                <div class="card-body">
+                    <p>${tianwuZeTianpan}+${tianwuZeDipan}</p>
+                    <p>${tianwuZeCalc.tianpanStar}+${tianwuZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-info">${tianwuZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">逆时针下二宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    天时贼
+                </div>
+                <div class="card-body">
+                    <p>${tianshiZeTianpan}+${tianshiZeDipan}</p>
+                    <p>${tianshiZeCalc.tianpanStar}+${tianshiZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-info">${tianshiZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">顺时针下三宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    天功贼
+                </div>
+                <div class="card-body">
+                    <p>${tiangongZeTianpan}+${tiangongZeDipan}</p>
+                    <p>${tiangongZeCalc.tianpanStar}+${tiangongZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-info">${tiangongZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">逆时针下四宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    天神贼
+                </div>
+                <div class="card-body">
+                    <p>${tianshenZeTianpan}+${tianshenZeDipan}</p>
+                    <p>${tianshenZeCalc.tianpanStar}+${tianshenZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-info">${tianshenZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">顺时针下五宫</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 第二行五个贼 -->
+    <div class="row mb-3">
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    地命贼
+                </div>
+                <div class="card-body">
+                    <p>${dimingZeTianpan}+${dimingZeDipan}</p>
+                    <p>${dimingZeCalc.tianpanStar}+${dimingZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-secondary">${dimingZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">顺时针下六宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    地物贼
+                </div>
+                <div class="card-body">
+                    <p>${diwuZeTianpan}+${diwuZeDipan}</p>
+                    <p>${diwuZeCalc.tianpanStar}+${diwuZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-secondary">${diwuZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">逆时针下七宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    地时贼
+                </div>
+                <div class="card-body">
+                    <p>${dishiZeTianpan}+${dishiZeDipan}</p>
+                    <p>${dishiZeCalc.tianpanStar}+${dishiZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-secondary">${dishiZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">顺时针下八宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    地功贼
+                </div>
+                <div class="card-body">
+                    <p>${digongZeTianpan}+${digongZeDipan}</p>
+                    <p>${digongZeCalc.tianpanStar}+${digongZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-secondary">${digongZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">逆时针下九宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    地神贼
+                </div>
+                <div class="card-body">
+                    <p>${dishenZeTianpan}+${dishenZeDipan}</p>
+                    <p>${dishenZeCalc.tianpanStar}+${dishenZeCalc.dipanStar}</p>
+                    <p><span class="badge bg-secondary">${dishenZeCalc.tuiziResult}</span></p>
+                    <p class="small text-muted">顺时针下十宫</p>
                 </div>
             </div>
         </div>
