@@ -4035,6 +4035,36 @@ function showSancengpan(tianpanMap) {
         </div>
     </div>
     
+    <!-- 添加第四层盘按钮和下拉框 -->
+    <div class="row mt-4" id="sicengpan-btn-container">
+        <div class="col-md-12 mb-3">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    第四层盘
+                </div>
+                <div class="card-body text-center">
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-md-4 mb-2">
+                            <label for="sicengpan-type" class="form-label">选择类型:</label>
+                            <select id="sicengpan-type" class="form-select">
+                                <option value="命" selected>命</option>
+                                <option value="物">物</option>
+                                <option value="时">时</option>
+                                <option value="功">功</option>
+                                <option value="神">神</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-dark" id="sicengpan-btn">显示第四层盘</button>
+                        </div>
+                    </div>
+                    <p class="small text-muted mt-2">以天X贼的地盘放在地X贼的天盘上，然后逆时针排列</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="sicengpan-container" class="mt-3" style="display: none;"></div>
+    
     <div class="small text-muted mt-3">
         <p>占卜类型: ${zhanType}</p>
         <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
@@ -4043,4 +4073,187 @@ function showSancengpan(tianpanMap) {
     
     container.innerHTML = tableHtml;
     console.log("三层盘显示完成");
+    
+    // 添加第四层盘按钮的点击事件
+    const sicengpanBtn = document.getElementById("sicengpan-btn");
+    if (sicengpanBtn) {
+        sicengpanBtn.addEventListener("click", function() {
+            showSicengpan(sancengPanMap, {
+                tianmingZeDipan, tianmingZeTianpan,
+                tianwuZeDipan, tianwuZeTianpan,
+                tianshiZeDipan, tianshiZeTianpan,
+                tiangongZeDipan, tiangongZeTianpan,
+                tianshenZeDipan, tianshenZeTianpan,
+                dimingZeDipan, dimingZeTianpan,
+                diwuZeDipan, diwuZeTianpan,
+                dishiZeDipan, dishiZeTianpan,
+                digongZeDipan, digongZeTianpan,
+                dishenZeDipan, dishenZeTianpan
+            });
+        });
+    }
+}
+
+// 显示第四层盘
+function showSicengpan(sancengPanMap, zeInfo) {
+    console.log("显示第四层盘...");
+    
+    // 获取容器元素
+    const container = document.getElementById("sicengpan-container");
+    if (!container) {
+        console.error("未找到第四层盘容器元素");
+        return;
+    }
+    
+    // 切换显示状态
+    if (container.style.display === "none") {
+        container.style.display = "block";
+    } else {
+        container.style.display = "none";
+        return;
+    }
+    
+    // 获取当前时间
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    
+    // 定义地盘布局
+    const dipanLayout = [
+        ["巳", "午", "未", "申"],
+        ["辰", "空", "空", "酉"],
+        ["卯", "空", "空", "戌"],
+        ["寅", "丑", "子", "亥"]
+    ];
+    
+    // 获取选择的贼类型
+    const zeType = document.getElementById("sicengpan-type").value;
+    console.log(`选择的贼类型: ${zeType}`);
+    
+    // 确定对应的天贼和地贼
+    let tianZeDipan, diZeTianpan;
+    
+    switch (zeType) {
+        case "命":
+            tianZeDipan = zeInfo.tianmingZeDipan;
+            diZeTianpan = zeInfo.dimingZeTianpan;
+            break;
+        case "物":
+            tianZeDipan = zeInfo.tianwuZeDipan;
+            diZeTianpan = zeInfo.diwuZeTianpan;
+            break;
+        case "时":
+            tianZeDipan = zeInfo.tianshiZeDipan;
+            diZeTianpan = zeInfo.dishiZeTianpan;
+            break;
+        case "功":
+            tianZeDipan = zeInfo.tiangongZeDipan;
+            diZeTianpan = zeInfo.digongZeTianpan;
+            break;
+        case "神":
+            tianZeDipan = zeInfo.tianshenZeDipan;
+            diZeTianpan = zeInfo.dishenZeTianpan;
+            break;
+        default:
+            console.error(`未知的贼类型: ${zeType}`);
+            container.innerHTML = `<div class="alert alert-warning">未知的贼类型: ${zeType}</div>`;
+            return;
+    }
+    
+    console.log(`天${zeType}贼地盘: ${tianZeDipan}`);
+    console.log(`地${zeType}贼天盘: ${diZeTianpan}`);
+    
+    // 创建第四层盘映射（地盘->天盘）
+    const sicengPanMap = {};
+    
+    // 获取标准地支数组
+    const branches = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    
+    // 获取天贼地盘和地贼天盘的索引
+    const tianZeDipanIndex = branches.indexOf(tianZeDipan);
+    const diZeTianpanIndex = branches.indexOf(diZeTianpan);
+    
+    if (tianZeDipanIndex === -1 || diZeTianpanIndex === -1) {
+        console.error(`无效的地支: 天${zeType}贼地盘=${tianZeDipan}(${tianZeDipanIndex}), 地${zeType}贼天盘=${diZeTianpan}(${diZeTianpanIndex})`);
+        container.innerHTML = `<div class="alert alert-warning">无法计算第四层盘: 无效的地支值</div>`;
+        return;
+    }
+    
+    // 首先，将天X贼的地盘放在地X贼的天盘位置上
+    sicengPanMap[diZeTianpan] = tianZeDipan;
+    console.log(`第四层盘: 将天${zeType}贼的地盘${tianZeDipan}放在地${zeType}贼的天盘${diZeTianpan}位置上`);
+    
+    // 然后从天X贼地盘开始，逆时针排列其余天盘
+    for (let i = 1; i < 12; i++) {
+        // 计算地支在地盘中的位置（正向顺序+i）
+        const dipanIndex = (diZeTianpanIndex + i) % 12;
+        const dipanBranch = branches[dipanIndex];
+        
+        // 从起点天盘索引开始，减去偏移量（因为是逆时针）
+        const tianpanIndex = (tianZeDipanIndex - i + 12) % 12;
+        const tianpanValue = branches[tianpanIndex];
+        
+        // 设置地盘到天盘的映射
+        sicengPanMap[dipanBranch] = tianpanValue;
+        console.log(`第四层盘: 地盘 ${dipanBranch} -> 天盘 ${tianpanValue}`);
+    }
+    
+    // 创建第四层盘表格
+    let tableHtml = `
+    <div class="mb-3 alert alert-info">
+        第四层盘：天${zeType}贼的地盘${tianZeDipan}放在地${zeType}贼的天盘${diZeTianpan}位置上，然后<strong>逆时针</strong>排列
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered text-center sicengpan-table">
+    `;
+    
+    for (let row = 0; row < 4; row++) {
+        tableHtml += '<tr>';
+        
+        for (let col = 0; col < 4; col++) {
+            const dizhiValue = dipanLayout[row][col];
+            
+            if (dizhiValue === "空") {
+                if (row === 1 && col === 1) {
+                    tableHtml += '<td colspan="2" rowspan="2" class="center-cell bg-light">';
+                    tableHtml += '<div class="center-text">第四层盘</div>';
+                    tableHtml += '</td>';
+                }
+            } else {
+                // 获取这个地支对应的天盘值
+                const tianpanValue = sicengPanMap[dizhiValue] || "无";
+                
+                // 突出显示特殊位置
+                let specialClass = "";
+                if (dizhiValue === diZeTianpan && tianpanValue === tianZeDipan) {
+                    specialClass = "bg-primary text-white"; // 天X贼地盘放在地X贼天盘的位置
+                }
+                
+                tableHtml += `<td class="position-relative ${specialClass}">`;
+                tableHtml += `<div class="tp-label">${tianpanValue}</div>`;
+                tableHtml += `<div class="dz-label">${dizhiValue}</div>`;
+                tableHtml += '</td>';
+            }
+        }
+        
+        tableHtml += '</tr>';
+    }
+    
+    tableHtml += '</table></div>';
+    tableHtml += `<div class="small text-muted mt-2">注：深色背景表示天${zeType}贼的地盘放在地${zeType}贼的天盘位置上，天盘按<strong>逆时针</strong>方向排列</div>`;
+    
+    // 获取占卜类型（他占/自占）
+    const taZhanRadio = document.getElementById("taZhan");
+    const isForOthers = taZhanRadio && taZhanRadio.checked;
+    const zhanType = isForOthers ? "他占" : "自占";
+    
+    tableHtml += `
+    <div class="small text-muted mt-3">
+        <p>占卜类型: ${zhanType}</p>
+        <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
+    </div>
+    `;
+    
+    container.innerHTML = tableHtml;
+    console.log("第四层盘显示完成");
 }
