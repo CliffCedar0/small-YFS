@@ -3208,7 +3208,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 更新固定卡片信息（机锋门、十将、善司、值使）
+// 更新固定卡片信息（机锋门、十将）
 function updateFixedCards() {
     console.log("更新固定卡片信息");
     
@@ -3218,12 +3218,6 @@ function updateFixedCards() {
         
         // 更新十将卡片
         updateShijiangCard();
-        
-        // 更新善司卡片
-        updateShansiCard();
-        
-        // 更新值使卡片
-        updateZhishiCard();
         
         console.log("固定卡片信息更新完成");
     } catch (error) {
@@ -3345,195 +3339,9 @@ function updateShijiangCard() {
     }
 }
 
-// 更新善司卡片
-function updateShansiCard() {
-    console.log("更新善司卡片");
-    
-    try {
-        // 获取当前刻
-        const currentKe = getCurrentKe();
-        console.log(`当前刻: ${currentKe}`);
-        
-        // 计算善司（刻前一宫，逆时针方向）
-        const keIndex = getBranchIndex(currentKe);
-        const prevKeIndex = (keIndex - 1 + 12) % 12;
-        const prevKe = getBranchByIndex(prevKeIndex);
-        console.log(`刻前一宫(逆时针): ${prevKe}`);
-        
-        // 善司地盘位置就是刻前一宫（不再用对冲宫）
-        const shansiDipan = prevKe;
-        console.log(`善司地盘: ${shansiDipan}`);
-        
-        // 获取善司卡片元素
-        const tianpanElement = document.getElementById('shansi-tianpan-display');
-        const dipanElement = document.getElementById('shansi-dipan-display');
-        const tianpanStarElement = document.getElementById('shansi-tianpan-star');
-        const dipanStarElement = document.getElementById('shansi-dipan-star');
-        const resultElement = document.getElementById('shansi-result-display');
-        
-        if (!tianpanElement || !dipanElement || !tianpanStarElement || !dipanStarElement || !resultElement) {
-            console.error("未找到善司卡片元素");
-            return;
-        }
-        
-        // 计算善司对应的天盘
-        const shansiTianpan = findTianpanValueForDipan(shansiDipan);
-        if (!shansiTianpan) {
-            console.error(`未找到善司地盘 ${shansiDipan} 对应的天盘值`);
-            return;
-        }
-        
-        console.log(`善司: ${shansiTianpan}+${shansiDipan}`);
-        
-        // 获取天地盘对应的星司
-        const now = new Date();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-        
-        const tianpanDizhi = extractDizhi(shansiTianpan);
-        console.log(`善司天盘原值: ${shansiTianpan}, 地支: ${tianpanDizhi}`);
-        
-        const tianpanXingsi = getXingsiForDiZhi(tianpanDizhi);
-        const dipanXingsi = getXingsiForDiZhi(shansiDipan);
-        
-        // 计算善司推字结果
-        let shansiResult = "无法计算";
-        if (tianpanXingsi && dipanXingsi && tianpanXingsi.star && dipanXingsi.star) {
-            const tianpanStarNumber = xingsiNumberMap[tianpanXingsi.star];
-            const dipanStarNumber = xingsiNumberMap[dipanXingsi.star];
-            if (tianpanStarNumber && dipanStarNumber) {
-                const tuiziList = xingsiTuiziMap[tianpanXingsi.star];
-                if (tuiziList) {
-                    // 根据他占/自占确定推字方向
-                    const isTaZhan = document.getElementById('taZhan').checked;
-                    let tuiziIndex;
-                    
-                    if (isTaZhan) {
-                        // 他占顺数
-                        tuiziIndex = (parseInt(dipanStarNumber) - 1) % tuiziList.length;
-                    } else {
-                        // 自占逆数
-                        const num = parseInt(dipanStarNumber);
-                        tuiziIndex = (tuiziList.length - (num % tuiziList.length)) % tuiziList.length;
-                        if (num % tuiziList.length === 0) {
-                            tuiziIndex = 0;
-                        }
-                    }
-                    
-                    shansiResult = tuiziList[tuiziIndex] || "无法计算";
-                }
-            }
-        }
-        
-        // 更新善司卡片内容 - 确保只显示地支
-        tianpanElement.textContent = tianpanDizhi;
-        dipanElement.textContent = shansiDipan;
-        
-        tianpanStarElement.textContent = tianpanXingsi ? tianpanXingsi.star : "--";
-        dipanStarElement.textContent = dipanXingsi ? dipanXingsi.star : "--";
-        
-        resultElement.textContent = shansiResult;
-        
-        console.log("善司卡片更新完成");
-    } catch (error) {
-        console.error("更新善司卡片时出错:", error);
-    }
-}
 
-// 更新值使卡片
-function updateZhishiCard() {
-    console.log("更新值使卡片");
-    
-    try {
-        // 获取当前刻
-        const currentKe = getCurrentKe();
-        console.log(`当前刻: ${currentKe}`);
-        
-        // 计算值使（刻后一宫，顺时针方向）
-        const keIndex = getBranchIndex(currentKe);
-        const nextKeIndex = (keIndex + 1) % 12;
-        const nextKe = getBranchByIndex(nextKeIndex);
-        console.log(`刻后一宫(顺时针): ${nextKe}`);
-        
-        // 值使地盘位置就是刻后一宫（不再用对冲宫）
-        const zhishiDipan = nextKe;
-        console.log(`值使地盘: ${zhishiDipan}`);
-        
-        // 获取值使卡片元素
-        const tianpanElement = document.getElementById('zhishi-tianpan-display');
-        const dipanElement = document.getElementById('zhishi-dipan-display');
-        const tianpanStarElement = document.getElementById('zhishi-tianpan-star');
-        const dipanStarElement = document.getElementById('zhishi-dipan-star');
-        const resultElement = document.getElementById('zhishi-result-display');
-        
-        if (!tianpanElement || !dipanElement || !tianpanStarElement || !dipanStarElement || !resultElement) {
-            console.error("未找到值使卡片元素");
-            return;
-        }
-        
-        // 计算值使对应的天盘
-        const zhishiTianpan = findTianpanValueForDipan(zhishiDipan);
-        if (!zhishiTianpan) {
-            console.error(`未找到值使地盘 ${zhishiDipan} 对应的天盘值`);
-            return;
-        }
-        
-        console.log(`值使: ${zhishiTianpan}+${zhishiDipan}`);
-        
-        // 获取天地盘对应的星司
-        const now = new Date();
-        const hour = now.getHours();
-        const minute = now.getMinutes();
-        
-        const tianpanDizhi = extractDizhi(zhishiTianpan);
-        console.log(`值使天盘原值: ${zhishiTianpan}, 地支: ${tianpanDizhi}`);
-        
-        const tianpanXingsi = getXingsiForDiZhi(tianpanDizhi);
-        const dipanXingsi = getXingsiForDiZhi(zhishiDipan);
-        
-        // 计算值使推字结果
-        let zhishiResult = "无法计算";
-        if (tianpanXingsi && dipanXingsi && tianpanXingsi.star && dipanXingsi.star) {
-            const tianpanStarNumber = xingsiNumberMap[tianpanXingsi.star];
-            const dipanStarNumber = xingsiNumberMap[dipanXingsi.star];
-            if (tianpanStarNumber && dipanStarNumber) {
-                const tuiziList = xingsiTuiziMap[tianpanXingsi.star];
-                if (tuiziList) {
-                    // 根据他占/自占确定推字方向
-                    const isTaZhan = document.getElementById('taZhan').checked;
-                    let tuiziIndex;
-                    
-                    if (isTaZhan) {
-                        // 他占顺数
-                        tuiziIndex = (parseInt(dipanStarNumber) - 1) % tuiziList.length;
-                    } else {
-                        // 自占逆数
-                        const num = parseInt(dipanStarNumber);
-                        tuiziIndex = (tuiziList.length - (num % tuiziList.length)) % tuiziList.length;
-                        if (num % tuiziList.length === 0) {
-                            tuiziIndex = 0;
-                        }
-                    }
-                    
-                    zhishiResult = tuiziList[tuiziIndex] || "无法计算";
-                }
-            }
-        }
-        
-        // 更新值使卡片内容 - 确保只显示地支
-        tianpanElement.textContent = tianpanDizhi;
-        dipanElement.textContent = zhishiDipan;
-        
-        tianpanStarElement.textContent = tianpanXingsi ? tianpanXingsi.star : "--";
-        dipanStarElement.textContent = dipanXingsi ? dipanXingsi.star : "--";
-        
-        resultElement.textContent = zhishiResult;
-        
-        console.log("值使卡片更新完成");
-    } catch (error) {
-        console.error("更新值使卡片时出错:", error);
-    }
-}
+
+
 
 // 在表格中查找地盘对应的天盘值
 function findTianpanValueForDipan(targetDipan) {
