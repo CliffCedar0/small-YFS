@@ -332,34 +332,34 @@ function calculateJifengMen() {
         const selectedTianpanDizhi = extractDizhi(selectedTianpan);
         
         // 计算选择天盘的六合地支
-        const liuHeTianpan = liuheMap[selectedTianpanDizhi];
-        if (!liuHeTianpan) {
-            console.error(`找不到天盘${selectedTianpanDizhi}的六合关系`);
+        const liuHeDizhi = liuheMap[selectedTianpanDizhi];
+        if (!liuHeDizhi) {
+            console.error(`找不到地支${selectedTianpanDizhi}的六合关系`);
             return null;
         }
         
-        console.log(`天盘${selectedTianpan}的六合是${liuHeTianpan}`);
+        console.log(`初始天盘${selectedTianpan}(地支=${selectedTianpanDizhi})的六合地支是${liuHeDizhi}`);
         
-        // 从表格中找到六合地支所在位置的天盘值
         // 构建从地盘到天盘的映射
         const tianpanMap = {};
         
-        // 遍历表格单元格，构建地盘->天盘的映射
+        // 遍历表格单元格，构建映射
         dipanOrder.forEach((pos) => {
             const dipanName = pos.name;
             const cellElement = document.getElementById(`fill-${pos.row}-${pos.col}`);
             
             if (cellElement && cellElement.textContent) {
-                tianpanMap[dipanName] = cellElement.textContent;
-                console.log(`地盘${dipanName} -> 天盘${cellElement.textContent}`);
+                const tianpanValue = cellElement.textContent;
+                tianpanMap[dipanName] = tianpanValue; // 地盘 -> 天盘
+                console.log(`地盘${dipanName} -> 天盘${tianpanValue}`);
             }
         });
         
-        // 从地盘映射中找到六合地支对应的天盘值
-        const jifengTianpan = tianpanMap[liuHeTianpan] || "无";
-        const jifengDipan = liuHeTianpan;
+        // 机锋: 找到地盘为六合地支的宫位
+        const jifengDipan = liuHeDizhi;  // 地盘就是六合地支
+        const jifengTianpan = tianpanMap[jifengDipan] || "无"; // 查找该地盘对应的天盘
         
-        console.log(`机锋门: 天盘=${jifengTianpan}, 地盘=${jifengDipan}`);
+        console.log(`机锋门: 找到地盘为${liuHeDizhi}的宫位，天盘=${jifengTianpan}`);
         
         return {
             tianpan: jifengTianpan,
@@ -848,10 +848,10 @@ function updateJifengMen() {
         
         if (jifengTianpanElement && jifengDipanElement) {
             if (jifengMen && jifengMen.tianpan && jifengMen.dipan) {
-                // 提取天盘的地支部分（如果包含天干）
+                // 使用完整的天盘值
                 const tianpanText = jifengMen.tianpan;
-                // 获取最后一个字符，即地支
-                const tianpanDizhi = tianpanText.length > 0 ? tianpanText.charAt(tianpanText.length - 1) : tianpanText;
+                // 提取地支部分（如果包含天干）
+                const tianpanDizhi = extractDizhi(tianpanText);
                 
                 jifengTianpanElement.textContent = tianpanText;
                 jifengDipanElement.textContent = jifengMen.dipan;
@@ -916,12 +916,13 @@ function updateXingsiJifengMen(jifengMen) {
         let tianpanStar = null;
         let tianpanStarNumber = null;
         
-        if (jifengMen.tianpan && jifengMen.tianpan !== "无") {
-            // 提取地支部分（如果包含天干）
-            const tianpanDizhi = extractDizhi(jifengMen.tianpan);
-            
-            // 获取天盘地支对应的分段
-            const tianpanPart = getBranchPartByTime(tianpanDizhi, hour, minute);
+                    if (jifengMen.tianpan && jifengMen.tianpan !== "无") {
+                // 提取地支部分（如果包含天干）
+                const tianpanDizhi = extractDizhi(jifengMen.tianpan);
+                console.log(`从机锋门天盘${jifengMen.tianpan}提取地支：${tianpanDizhi}`);
+                
+                // 获取天盘地支对应的分段
+                const tianpanPart = getBranchPartByTime(tianpanDizhi, hour, minute);
             const tianpanKey = `${tianpanDizhi}-${tianpanPart}`;
             tianpanStar = xingsiNames[tianpanKey];
             
@@ -2699,6 +2700,58 @@ function showErcengpan(tianpanMap) {
     </div>
     `;
     
+    // 计算二层盘的机锋
+    console.log("计算二层盘的机锋...");
+    // 获取初始天盘（下拉框选择的）
+    const initialTianpanSelect = document.getElementById('tianpan');
+    const initialTianpan = initialTianpanSelect.value || getCurrentKe();
+    const initialTianpanDizhi = extractDizhi(initialTianpan);
+    console.log(`初始天盘: ${initialTianpanDizhi}`);
+    
+    // 计算六合地支
+    const liuHeDizhi = liuheMap[initialTianpanDizhi];
+    if (!liuHeDizhi) {
+        console.error(`找不到地支${initialTianpanDizhi}的六合关系`);
+    }
+    
+    // 机锋: 找到地盘为六合地支的宫位
+    const ercengJifengDipan = liuHeDizhi;  // 地盘就是六合地支
+    const ercengJifengTianpan = ercengPanMap[ercengJifengDipan] || "无"; // 查找该地盘对应的天盘
+    
+    console.log(`二层盘机锋: 找到地盘为${liuHeDizhi}的宫位，天盘=${ercengJifengTianpan}`);
+    
+    // 计算星司
+    const ercengJifengTianpanPart = getBranchPartByTime(ercengJifengTianpan, hour, minute);
+    const ercengJifengTianpanKey = `${ercengJifengTianpan}-${ercengJifengTianpanPart}`;
+    const ercengJifengTianpanStar = xingsiNames[ercengJifengTianpanKey];
+    
+    const ercengJifengDipanPart = getBranchPartByTime(ercengJifengDipan, hour, minute);
+    const ercengJifengDipanKey = `${ercengJifengDipan}-${ercengJifengDipanPart}`;
+    const ercengJifengDipanStar = xingsiNames[ercengJifengDipanKey];
+    
+    // 计算推字
+    const ercengJifengDipanStarNumber = xingsiNumberMap[ercengJifengDipanStar] || 0;
+    const ercengJifengResult = calculateTuiziForYongShen(ercengJifengTianpanStar, ercengJifengDipanStarNumber);
+    
+    // 添加二层盘的机锋卡片
+    tableHtml += `
+    <div class="row mt-4">
+        <div class="col-md-12 mb-3">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    二层盘机锋
+                </div>
+                <div class="card-body">
+                    <p>${ercengJifengTianpan}+${ercengJifengDipan}</p>
+                    <p>${ercengJifengTianpanStar}+${ercengJifengDipanStar}</p>
+                    <p><span class="badge bg-danger">${ercengJifengResult}</span></p>
+                    <p class="small text-muted">初始天盘(${initialTianpanDizhi})的六合地支(${liuHeDizhi})在二层盘中</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
     container.innerHTML = tableHtml;
     console.log("二层盘显示完成");
 
@@ -3743,6 +3796,36 @@ function showSancengpan(tianpanMap) {
     const renDaoResult = calculateTuiziForYongShen(renDaoTianpanStar, renDaoDipanStarNumber);
     console.log(`人盗推字结果: ${renDaoResult}`);
     
+    // 计算三层盘的机锋
+    console.log("计算三层盘的机锋...");
+    // 获取初始天盘（下拉框选择的）
+    const initialTianpanDizhi = extractDizhi(initialTianpan);
+    
+    // 计算六合地支
+    const liuHeDizhi = liuheMap[initialTianpanDizhi];
+    if (!liuHeDizhi) {
+        console.error(`找不到地支${initialTianpanDizhi}的六合关系`);
+    }
+    
+    // 机锋: 找到地盘为六合地支的宫位
+    const sancengJifengDipan = liuHeDizhi;  // 地盘就是六合地支
+    const sancengJifengTianpan = sancengPanMap[sancengJifengDipan] || "无"; // 查找该地盘对应的天盘
+    
+    console.log(`三层盘机锋: 找到地盘为${liuHeDizhi}的宫位，天盘=${sancengJifengTianpan}`);
+    
+    // 计算星司
+    const sancengJifengTianpanPart = getBranchPartByTime(sancengJifengTianpan, hour, minute);
+    const sancengJifengTianpanKey = `${sancengJifengTianpan}-${sancengJifengTianpanPart}`;
+    const sancengJifengTianpanStar = xingsiNames[sancengJifengTianpanKey];
+    
+    const sancengJifengDipanPart = getBranchPartByTime(sancengJifengDipan, hour, minute);
+    const sancengJifengDipanKey = `${sancengJifengDipan}-${sancengJifengDipanPart}`;
+    const sancengJifengDipanStar = xingsiNames[sancengJifengDipanKey];
+    
+    // 计算推字
+    const sancengJifengDipanStarNumber = xingsiNumberMap[sancengJifengDipanStar] || 0;
+    const sancengJifengResult = calculateTuiziForYongShen(sancengJifengTianpanStar, sancengJifengDipanStarNumber);
+    
     // 计算十贼
     console.log("计算十贼...");
     
@@ -3888,6 +3971,23 @@ function showSancengpan(tianpanMap) {
                     <p>${renDaoTianpanStar}+${renDaoDipanStar}</p>
                     <p><span class="badge bg-primary">${renDaoResult}</span></p>
                     <p class="small text-muted">下拉框选择的天盘在三层盘中的位置</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 计算三层盘的机锋 -->
+    <div class="row mt-4">
+        <div class="col-md-12 mb-3">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    三层盘机锋
+                </div>
+                <div class="card-body">
+                    <p>${sancengJifengTianpan}+${sancengJifengDipan}</p>
+                    <p>${sancengJifengTianpanStar}+${sancengJifengDipanStar}</p>
+                    <p><span class="badge bg-danger">${sancengJifengResult}</span></p>
+                    <p class="small text-muted">初始天盘(${initialTianpanDizhi})的六合地支(${liuHeDizhi})在三层盘中</p>
                 </div>
             </div>
         </div>
@@ -4247,6 +4347,58 @@ function showSicengpan(sancengPanMap, zeInfo) {
     
     tableHtml += '</table></div>';
     tableHtml += `<div class="small text-muted mt-2">注：深色背景表示天${zeType}贼的地盘放在地${zeType}贼的天盘位置上，天盘按<strong>逆时针</strong>方向排列</div>`;
+    
+    // 计算第四层盘的机锋
+    console.log("计算第四层盘的机锋...");
+    // 获取初始天盘（下拉框选择的）
+    const initialTianpanSelect = document.getElementById('tianpan');
+    const initialTianpan = initialTianpanSelect.value || getCurrentKe();
+    const initialTianpanDizhi = extractDizhi(initialTianpan);
+    console.log(`初始天盘: ${initialTianpanDizhi}`);
+    
+    // 计算六合地支
+    const liuHeDizhi = liuheMap[initialTianpanDizhi];
+    if (!liuHeDizhi) {
+        console.error(`找不到地支${initialTianpanDizhi}的六合关系`);
+    }
+    
+    // 机锋: 找到地盘为六合地支的宫位
+    const sicengJifengDipan = liuHeDizhi;  // 地盘就是六合地支
+    const sicengJifengTianpan = sicengPanMap[sicengJifengDipan] || "无"; // 查找该地盘对应的天盘
+    
+    console.log(`第四层盘机锋: 找到地盘为${liuHeDizhi}的宫位，天盘=${sicengJifengTianpan}`);
+    
+    // 计算星司
+    const sicengJifengTianpanPart = getBranchPartByTime(sicengJifengTianpan, hour, minute);
+    const sicengJifengTianpanKey = `${sicengJifengTianpan}-${sicengJifengTianpanPart}`;
+    const sicengJifengTianpanStar = xingsiNames[sicengJifengTianpanKey];
+    
+    const sicengJifengDipanPart = getBranchPartByTime(sicengJifengDipan, hour, minute);
+    const sicengJifengDipanKey = `${sicengJifengDipan}-${sicengJifengDipanPart}`;
+    const sicengJifengDipanStar = xingsiNames[sicengJifengDipanKey];
+    
+    // 计算推字
+    const sicengJifengDipanStarNumber = xingsiNumberMap[sicengJifengDipanStar] || 0;
+    const sicengJifengResult = calculateTuiziForYongShen(sicengJifengTianpanStar, sicengJifengDipanStarNumber);
+    
+    // 添加第四层盘的机锋卡片
+    tableHtml += `
+    <div class="row mt-4">
+        <div class="col-md-12 mb-3">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    第四层盘机锋
+                </div>
+                <div class="card-body">
+                    <p>${sicengJifengTianpan}+${sicengJifengDipan}</p>
+                    <p>${sicengJifengTianpanStar}+${sicengJifengDipanStar}</p>
+                    <p><span class="badge bg-danger">${sicengJifengResult}</span></p>
+                    <p class="small text-muted">初始天盘(${initialTianpanDizhi})的六合地支(${liuHeDizhi})在第四层盘中</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
     
     // 获取占卜类型（他占/自占）
     const taZhanRadio = document.getElementById("taZhan");
