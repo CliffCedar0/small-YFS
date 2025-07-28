@@ -2481,14 +2481,15 @@ function showErcengpan(tianpanMap) {
     ercengPanMap[dijiGong] = tianpanDizhi;
     console.log(`二层盘：将天机的天盘 ${tianpanDizhi} 放在地机的地盘 ${dijiGong} 位置上`);
     
-    // 然后从天盘地支开始，逆时针排列其余天盘
+    // 然后从天盘地支开始，真正的逆时针排列其余天盘
     for (let i = 1; i < 12; i++) {
-        // 计算地支在地盘中的位置（逆时针+1）
+        // 计算地支在地盘中的位置（正向顺序+i）
         const dipanIndex = (dijiGongIndex + i) % 12;
         const dipanBranch = branches[dipanIndex];
         
-        // 计算对应的天盘值（逆时针+1）
-        const tianpanIndex = (tianpanDizhiIndex + i) % 12;
+        // 从起点天盘索引开始，减去偏移量（因为是逆时针）
+        // 使用与第一层盘相同的逆时针逻辑
+        const tianpanIndex = (tianpanDizhiIndex - i + 12) % 12;
         const tianpanValue = branches[tianpanIndex];
         
         // 设置地盘到天盘的映射
@@ -3709,14 +3710,15 @@ function showSancengpan(tianpanMap) {
     // 人气地盘位置索引
     const renqiDipanIndex = branches.indexOf(renqiDipan);
     
-    // 然后从天气天盘开始，按照小阴符术规则逆时针排列其余天盘
+    // 然后从天气天盘开始，按照小阴符术规则真正的逆时针排列其余天盘
     for (let i = 1; i < 12; i++) {
-        // 计算地支在地盘中的位置（逆时针+1）
+        // 计算地支在地盘中的位置（正向顺序+i）
         const dipanIndex = (renqiDipanIndex + i) % 12;
         const dipanBranch = branches[dipanIndex];
         
-        // 计算对应的天盘值（逆时针+1）
-        const tianpanIndex = (tianqiTianpanIndex + i) % 12;
+        // 从起点天盘索引开始，减去偏移量（因为是逆时针）
+        // 使用与第一层盘相同的逆时针逻辑
+        const tianpanIndex = (tianqiTianpanIndex - i + 12) % 12;
         const tianpanValue = branches[tianpanIndex];
         
         // 设置地盘到天盘的映射
@@ -3773,7 +3775,157 @@ function showSancengpan(tianpanMap) {
     const isForOthers = taZhanRadio && taZhanRadio.checked;
     const zhanType = isForOthers ? "他占" : "自占";
     
+    // 计算天地盗相关信息
+    console.log("计算天地盗...");
+    const tiandiDaoTianpan = tianqiTianpan;  // 二层盘天气的天盘
+    const tiandiDaoDipan = renqiDipan;       // 二层盘人气的地盘
+    
+    // 计算天地盗天盘星司
+    const tiandiDaoTianpanPart = getBranchPartByTime(tiandiDaoTianpan, hour, minute);
+    const tiandiDaoTianpanKey = `${tiandiDaoTianpan}-${tiandiDaoTianpanPart}`;
+    const tiandiDaoTianpanStar = xingsiNames[tiandiDaoTianpanKey];
+    const tiandiDaoTianpanStarNumber = xingsiNumberMap[tiandiDaoTianpanStar] || 0;
+    console.log(`天地盗天盘星司: ${tiandiDaoTianpanStar}(${tiandiDaoTianpanStarNumber})`);
+    
+    // 计算天地盗地盘星司
+    const tiandiDaoDipanPart = getBranchPartByTime(tiandiDaoDipan, hour, minute);
+    const tiandiDaoDipanKey = `${tiandiDaoDipan}-${tiandiDaoDipanPart}`;
+    const tiandiDaoDipanStar = xingsiNames[tiandiDaoDipanKey];
+    const tiandiDaoDipanStarNumber = xingsiNumberMap[tiandiDaoDipanStar] || 0;
+    console.log(`天地盗地盘星司: ${tiandiDaoDipanStar}(${tiandiDaoDipanStarNumber})`);
+    
+    // 计算天地盗推字结果
+    const tiandiDaoResult = calculateTuiziForYongShen(tiandiDaoTianpanStar, tiandiDaoDipanStarNumber);
+    console.log(`天地盗推字结果: ${tiandiDaoResult}`);
+    
+    // 计算万物盗相关信息
+    console.log("计算万物盗...");
+    // 万物盗 = 天地盗的对宫
+    const wanwuDaoDipan = getOppositeGong(tiandiDaoDipan);
+    console.log(`万物盗地盘: ${wanwuDaoDipan} (天地盗地盘${tiandiDaoDipan}的对冲宫)`);
+    
+    // 找到万物盗地盘对应的天盘（在三层盘中）
+    const wanwuDaoTianpan = sancengPanMap[wanwuDaoDipan];
+    console.log(`万物盗天盘: ${wanwuDaoTianpan}`);
+    
+    // 计算万物盗天盘星司
+    const wanwuDaoTianpanPart = getBranchPartByTime(wanwuDaoTianpan, hour, minute);
+    const wanwuDaoTianpanKey = `${wanwuDaoTianpan}-${wanwuDaoTianpanPart}`;
+    const wanwuDaoTianpanStar = xingsiNames[wanwuDaoTianpanKey];
+    const wanwuDaoTianpanStarNumber = xingsiNumberMap[wanwuDaoTianpanStar] || 0;
+    console.log(`万物盗天盘星司: ${wanwuDaoTianpanStar}(${wanwuDaoTianpanStarNumber})`);
+    
+    // 计算万物盗地盘星司
+    const wanwuDaoDipanPart = getBranchPartByTime(wanwuDaoDipan, hour, minute);
+    const wanwuDaoDipanKey = `${wanwuDaoDipan}-${wanwuDaoDipanPart}`;
+    const wanwuDaoDipanStar = xingsiNames[wanwuDaoDipanKey];
+    const wanwuDaoDipanStarNumber = xingsiNumberMap[wanwuDaoDipanStar] || 0;
+    console.log(`万物盗地盘星司: ${wanwuDaoDipanStar}(${wanwuDaoDipanStarNumber})`);
+    
+    // 计算万物盗推字结果
+    const wanwuDaoResult = calculateTuiziForYongShen(wanwuDaoTianpanStar, wanwuDaoDipanStarNumber);
+    console.log(`万物盗推字结果: ${wanwuDaoResult}`);
+    
+    // 计算人盗相关信息
+    console.log("计算人盗...");
+    // 获取最初下拉框选择的天盘
+    const tianpanSelect = document.getElementById('tianpan');
+    let initialTianpan = "";
+    
+    if (tianpanSelect && tianpanSelect.value && tianpanSelect.value !== "无") {
+        // 使用下拉框选择的值
+        initialTianpan = tianpanSelect.value;
+        console.log(`使用下拉框选择的天盘值: ${initialTianpan}`);
+    } else {
+        // 使用当前时间计算的天盘值
+        const currentKe = getCurrentKe();
+        initialTianpan = currentKe;
+        console.log(`使用当前时间计算的天盘值: ${initialTianpan}`);
+    }
+    
+    // 查找该天盘在三层盘中的地盘位置
+    let renDaoDipan = null;
+    for (const [dipan, tianpan] of Object.entries(sancengPanMap)) {
+        if (tianpan === initialTianpan) {
+            renDaoDipan = dipan;
+            break;
+        }
+    }
+    
+    // 如果找不到位置
+    if (!renDaoDipan) {
+        console.error(`在三层盘中未找到天盘为${initialTianpan}的地盘位置`);
+        renDaoDipan = "未知";
+    }
+    
+    const renDaoTianpan = initialTianpan;
+    console.log(`人盗: 天盘=${renDaoTianpan}, 地盘=${renDaoDipan}`);
+    
+    // 计算人盗天盘星司
+    const renDaoTianpanPart = getBranchPartByTime(renDaoTianpan, hour, minute);
+    const renDaoTianpanKey = `${renDaoTianpan}-${renDaoTianpanPart}`;
+    const renDaoTianpanStar = xingsiNames[renDaoTianpanKey];
+    const renDaoTianpanStarNumber = xingsiNumberMap[renDaoTianpanStar] || 0;
+    console.log(`人盗天盘星司: ${renDaoTianpanStar}(${renDaoTianpanStarNumber})`);
+    
+    // 计算人盗地盘星司
+    const renDaoDipanPart = getBranchPartByTime(renDaoDipan, hour, minute);
+    const renDaoDipanKey = `${renDaoDipan}-${renDaoDipanPart}`;
+    const renDaoDipanStar = xingsiNames[renDaoDipanKey];
+    const renDaoDipanStarNumber = xingsiNumberMap[renDaoDipanStar] || 0;
+    console.log(`人盗地盘星司: ${renDaoDipanStar}(${renDaoDipanStarNumber})`);
+    
+    // 计算人盗推字结果
+    const renDaoResult = calculateTuiziForYongShen(renDaoTianpanStar, renDaoDipanStarNumber);
+    console.log(`人盗推字结果: ${renDaoResult}`);
+    
+    // 添加三个盗的卡片
     tableHtml += `
+    <div class="row mt-4">
+        <h4>三层盘分析</h4>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    天地盗
+                </div>
+                <div class="card-body">
+                    <p>${tiandiDaoTianpan}+${tiandiDaoDipan}</p>
+                    <p>${tiandiDaoTianpanStar}+${tiandiDaoDipanStar}</p>
+                    <p><span class="badge bg-danger">${tiandiDaoResult}</span></p>
+                    <p class="small text-muted">二层盘天气的天盘+二层盘人气的地盘</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    万物盗
+                </div>
+                <div class="card-body">
+                    <p>${wanwuDaoTianpan}+${wanwuDaoDipan}</p>
+                    <p>${wanwuDaoTianpanStar}+${wanwuDaoDipanStar}</p>
+                    <p><span class="badge bg-success">${wanwuDaoResult}</span></p>
+                    <p class="small text-muted">天地盗地盘的对宫</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    人盗
+                </div>
+                <div class="card-body">
+                    <p>${renDaoTianpan}+${renDaoDipan}</p>
+                    <p>${renDaoTianpanStar}+${renDaoDipanStar}</p>
+                    <p><span class="badge bg-primary">${renDaoResult}</span></p>
+                    <p class="small text-muted">下拉框选择的天盘在三层盘中的位置</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="small text-muted mt-3">
         <p>占卜类型: ${zhanType}</p>
         <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
