@@ -2348,20 +2348,6 @@ function calculateYongShen() {
                     </div>
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-12 mb-3 text-center">
-                        <div class="card">
-                            <div class="card-header bg-primary text-white">
-                                三层盘
-                            </div>
-                            <div class="card-body text-center">
-                                <button class="btn btn-outline-primary" id="sancengpan-btn">显示三层盘</button>
-                                <p class="small text-muted mt-2">点击按钮查看三层盘</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
                 <div id="ercengpan-container" class="mt-3" style="display: none;"></div>
                 <div id="sancengpan-container" class="mt-3" style="display: none;"></div>
                 
@@ -2380,14 +2366,7 @@ function calculateYongShen() {
                 console.log("二层盘按钮事件已绑定");
             }
             
-            // 添加三层盘按钮的点击事件
-            const sancengpanBtn = document.getElementById("sancengpan-btn");
-            if (sancengpanBtn) {
-                sancengpanBtn.addEventListener("click", function() {
-                    showSancengpan(tianpanMap);
-                });
-                console.log("三层盘按钮事件已绑定");
-            }
+            // 删除三层盘按钮事件 - 现在在二层盘函数中添加
         }
         
         console.log("用神计算完成");
@@ -2722,6 +2701,33 @@ function showErcengpan(tianpanMap) {
     
     container.innerHTML = tableHtml;
     console.log("二层盘显示完成");
+
+    // 添加三层盘按钮
+    const sancengpanBtnContainer = document.createElement('div');
+    sancengpanBtnContainer.className = 'row mt-4';
+    sancengpanBtnContainer.innerHTML = `
+        <div class="col-md-12 mb-3 text-center">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    三层盘
+                </div>
+                <div class="card-body text-center">
+                    <button class="btn btn-outline-primary" id="sancengpan-btn">显示三层盘</button>
+                    <p class="small text-muted mt-2">点击按钮查看三层盘</p>
+                </div>
+            </div>
+        </div>
+    `;
+    container.appendChild(sancengpanBtnContainer);
+
+    // 添加三层盘按钮的点击事件
+    const sancengpanBtn = document.getElementById("sancengpan-btn");
+    if (sancengpanBtn) {
+        sancengpanBtn.addEventListener("click", function() {
+            showSancengpan(tianpanMap);
+        });
+        console.log("三层盘按钮事件已绑定");
+    }
 }
 
 // 用神推字计算
