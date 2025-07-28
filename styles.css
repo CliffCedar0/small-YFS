@@ -414,3 +414,40 @@
 #ercengpan-container {
     transition: all 0.3s ease;
 } 
+
+/* 通用排盘表格样式 */
+.tianpan-table,
+.sancengpan-table,
+.sicengpan-table {
+    max-width: 500px;
+    margin: 0 auto;
+    table-layout: fixed;
+}
+
+.tianpan-table td,
+.sancengpan-table td,
+.sicengpan-table td {
+    width: 25%;
+    height: 80px;
+    padding: 5px;
+    text-align: center;
+    position: relative;
+}
+
+.tianpan-table .center-cell,
+.sancengpan-table .center-cell,
+.sicengpan-table .center-cell {
+    vertical-align: middle;
+}
+
+.tianpan-table .center-text,
+.sancengpan-table .center-text,
+.sicengpan-table .center-text {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+#sancengpan-container,
+#sicengpan-container {
+    transition: all 0.3s ease;
+} 
