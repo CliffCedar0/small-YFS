@@ -781,7 +781,21 @@ function updateTimeDisplay() {
         
         // 检查元素是否存在
         if (tianpanSelect) {
-            tianpanSelect.value = currentTianPan; // 天盘根据当前刻设置
+            // 确认当前刻选项存在
+            let keOptionExists = false;
+            for (let i = 0; i < tianpanSelect.options.length; i++) {
+                if (tianpanSelect.options[i].value === currentTianPan) {
+                    keOptionExists = true;
+                    break;
+                }
+            }
+            
+            if (keOptionExists) {
+                tianpanSelect.value = currentTianPan; // 天盘根据当前刻设置
+                console.log(`设置天盘下拉框值为当前刻: ${currentTianPan}`);
+            } else {
+                console.warn(`天盘下拉框中没有当前刻选项: ${currentTianPan}`);
+            }
         } else {
             console.error("未找到天盘下拉框元素");
         }
@@ -1491,28 +1505,32 @@ function initDizhiDropdowns() {
             return;
         }
         
+        // 获取当前刻
+        const currentKe = getCurrentKe();
+        console.log(`当前刻: ${currentKe}`);
+        
         // 清空现有选项
-        tianpanSelect.innerHTML = '<option value="" selected disabled>请选择天盘</option>';
+        tianpanSelect.innerHTML = '';
         dipanSelect.innerHTML = '<option value="" selected disabled>请选择地盘</option>';
         
         // 添加地支选项
         dizhi.forEach(branch => {
+            // 添加天盘选项
             const tianpanOption = document.createElement('option');
             tianpanOption.value = branch;
             tianpanOption.textContent = branch;
+            // 如果是当前刻，设为默认选中
+            if (branch === currentKe) {
+                tianpanOption.selected = true;
+            }
             tianpanSelect.appendChild(tianpanOption);
             
+            // 添加地盘选项
             const dipanOption = document.createElement('option');
             dipanOption.value = branch;
             dipanOption.textContent = branch;
             dipanSelect.appendChild(dipanOption);
         });
-        
-        // 添加"无"选项到天盘
-        const noneOption = document.createElement('option');
-        noneOption.value = "无";
-        noneOption.textContent = "无";
-        tianpanSelect.appendChild(noneOption);
         
         console.log("地支下拉框初始化完成");
     } catch (error) {
