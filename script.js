@@ -2300,7 +2300,7 @@ function calculateYongShen() {
         if (resultElement) {
             resultElement.innerHTML = `
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-success text-white">
                                 天机
@@ -2313,7 +2313,7 @@ function calculateYongShen() {
                         </div>
                     </div>
                     
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-info text-white">
                                 地机
@@ -2325,10 +2325,8 @@ function calculateYongShen() {
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-12 mb-3">
+                    
+                    <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-warning text-dark">
                                 人机
