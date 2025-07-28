@@ -2072,49 +2072,43 @@ function calculateYongShen() {
         const dijiResult = calculateTuiziForYongShen(dijiTianpanStar, dizhiStarNumber);
         console.log(`地机推字结果: ${dijiResult}`);
         
-        // 计算人机（天盘下拉框所选的天盘位置）
+        // 计算人机（下拉框选择的天盘，在第一层盘中对应的地盘位置）
         const tianpanSelect = document.getElementById('tianpan');
-        let selectedTianpan = "";
+        let selectedValue = "";
         
         if (tianpanSelect && tianpanSelect.value && tianpanSelect.value !== "无") {
             // 如果天盘下拉框有选择值，则使用该值
-            selectedTianpan = tianpanSelect.value;
-            console.log(`使用天盘下拉框选择的值: ${selectedTianpan}`);
+            selectedValue = tianpanSelect.value;
+            console.log(`使用天盘下拉框选择的值: ${selectedValue}`);
         } else {
-            // 如果天盘下拉框未选择或选择了"无"，则使用当前时间计算的天盘值
+            // 如果天盘下拉框未选择或选择了"无"，则使用当前时间计算的刻值
             const currentKe = getCurrentKe();
-            selectedTianpan = currentKe;
-            console.log(`使用当前时间计算的天盘值: ${selectedTianpan}`);
+            selectedValue = currentKe;
+            console.log(`使用当前刻: ${selectedValue}`);
         }
         
-        if (!selectedTianpan) {
-            console.error("无法获取有效的天盘值");
+        if (!selectedValue) {
+            console.error("无法获取有效的刻值");
             return;
         }
         
-        console.log(`人机天盘: ${selectedTianpan}`);
+        // 提取地支部分（如果包含天干）
+        const selectedDizhi = extractDizhi(selectedValue);
+        console.log(`选择的地支: ${selectedDizhi}`);
         
-        // 找到天盘对应的地盘位置
-        let renjiDipan = null;
-        for (const [dipan, tianpan] of Object.entries(tianpanMap)) {
-            if (tianpan === selectedTianpan) {
-                renjiDipan = dipan;
-                break;
-            }
-        }
+        // 这个地支就是人机的地盘位置
+        const renjiDipan = selectedDizhi;
         
-        if (!renjiDipan) {
-            console.error(`未找到天盘 ${selectedTianpan} 对应的地盘位置`);
-            
-            // 尝试使用当前时辰作为地盘
-            const currentBranch = getCurrentTimeBranch();
-            if (currentBranch) {
-                renjiDipan = currentBranch;
-                console.log(`使用当前时辰 ${currentBranch} 作为人机地盘`);
-            } else {
+        // 在第一层盘（原始天盘地盘映射）中找到对应的天盘值
+        // 使用变量selectedTianpan代替renjiTianpanDizhi避免重复声明错误
+        const selectedTianpan = tianpanMap[renjiDipan];
+        
+        if (!selectedTianpan || selectedTianpan === "无") {
+            console.error(`在第一层盘中未找到地盘 ${renjiDipan} 对应的天盘`);
                 return;
-            }
         }
+        
+        console.log(`人机: 地盘=${renjiDipan}, 天盘=${selectedTianpan}`);
         
         console.log(`人机地盘: ${renjiDipan}`);
         
@@ -2322,10 +2316,10 @@ function calculateYongShen() {
                                 <p>${dijiTianpanDizhi}+${dijiGong}</p>
                                 <p>${dijiTianpanStar}+${dizhiStar}</p>
                                 <p><span class="badge bg-info">${dijiResult}</span></p>
-                            </div>
                         </div>
                     </div>
-                    
+                </div>
+                
                     <div class="col-md-4 mb-3">
                         <div class="card h-100">
                             <div class="card-header bg-warning text-dark">
@@ -2548,9 +2542,41 @@ function showErcengpan(tianpanMap) {
     // 计算人气、天气、地气
     // ----- 人气卡片（基于二层盘） -----
     console.log("计算人气（基于二层盘）...");
-    // 人气 = 天机天盘 + 地机地盘（在二层盘中，天机天盘已经放在了地机地盘位置上）
-    const renqiTianpan = tianpanDizhi;  // 天机的天盘
-    const renqiDipan = dijiGong;        // 地机的地盘
+    
+    // 获取下拉框选择的天盘或当前刻值
+    const renqiTianpanSelect = document.getElementById('tianpan');
+    let renqiSelectedValue = "";
+    
+    if (renqiTianpanSelect && renqiTianpanSelect.value && renqiTianpanSelect.value !== "无") {
+        // 如果天盘下拉框有选择值，则使用该值
+        renqiSelectedValue = renqiTianpanSelect.value;
+        console.log(`使用天盘下拉框选择的值: ${renqiSelectedValue}`);
+    } else {
+        // 如果天盘下拉框未选择或选择了"无"，则使用当前时间计算的刻值
+        const currentKe = getCurrentKe();
+        renqiSelectedValue = currentKe;
+        console.log(`使用当前刻: ${renqiSelectedValue}`);
+    }
+    
+            // 提取地支部分（如果包含天干）
+    const renqiSelectedDizhi = extractDizhi(renqiSelectedValue);
+    console.log(`人气选择的地支: ${renqiSelectedDizhi}`);
+    
+    // 在二层盘中找天盘为所选地支的地盘位置
+    let renqiDipan = null;
+    for (const [dipan, tianpan] of Object.entries(ercengPanMap)) {
+        if (tianpan === renqiSelectedDizhi) {
+            renqiDipan = dipan;
+            break;
+        }
+    }
+    
+    if (!renqiDipan) {
+        console.error(`在二层盘中未找到天盘为${renqiSelectedDizhi}的地盘位置`);
+        renqiDipan = dijiGong; // 如果找不到，使用默认的地机宫位作为地盘
+    }
+    
+    const renqiTianpan = renqiSelectedDizhi; // 选择的天盘值
     
     // 计算人气天盘星司
     const renqiTianpanPart = getBranchPartByTime(renqiTianpan, hour, minute);
@@ -3390,17 +3416,17 @@ function showSancengpan(tianpanMap) {
     const container = document.getElementById("sancengpan-container");
     if (!container) {
         console.error("未找到三层盘容器元素");
-        return;
-    }
-    
+            return;
+        }
+        
     // 切换显示状态
     if (container.style.display === "none") {
         container.style.display = "block";
     } else {
         container.style.display = "none";
-        return;
-    }
-    
+            return;
+        }
+        
     // 获取用神选择
     const yongshenSelect = document.getElementById("yongshen-select");
     if (!yongshenSelect || !yongshenSelect.value) {
@@ -3474,14 +3500,45 @@ function showSancengpan(tianpanMap) {
     }
     
     // 获取当前时间
-    const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        
     // 计算二层盘的人气和天气
-    // 人气 = 天机天盘 + 地机地盘（在二层盘中，天机天盘已经放在了地机地盘位置上）
-    const renqiTianpan = tianpanDizhi;  // 天机的天盘
-    const renqiDipan = dijiGong;        // 地机的地盘
+    // 获取下拉框选择的天盘或当前刻值
+    const renqiTianpanSelect = document.getElementById('tianpan');
+    let renqiSelectedValue = "";
+    
+    if (renqiTianpanSelect && renqiTianpanSelect.value && renqiTianpanSelect.value !== "无") {
+        // 如果天盘下拉框有选择值，则使用该值
+        renqiSelectedValue = renqiTianpanSelect.value;
+        console.log(`使用天盘下拉框选择的值(人气): ${renqiSelectedValue}`);
+    } else {
+        // 如果天盘下拉框未选择或选择了"无"，则使用当前时间计算的刻值
+        const currentKe = getCurrentKe();
+        renqiSelectedValue = currentKe;
+        console.log(`使用当前刻(人气): ${renqiSelectedValue}`);
+    }
+    
+    // 提取地支部分（如果包含天干）
+    const renqiSelectedDizhi = extractDizhi(renqiSelectedValue);
+    console.log(`人气选择的地支: ${renqiSelectedDizhi}`);
+    
+    // 在二层盘中找天盘为所选地支的地盘位置
+    let renqiDipan = null;
+    for (const [dipan, tianpan] of Object.entries(ercengPanMap)) {
+        if (tianpan === renqiSelectedDizhi) {
+            renqiDipan = dipan;
+            break;
+        }
+    }
+    
+    if (!renqiDipan) {
+        console.error(`在二层盘中未找到天盘为${renqiSelectedDizhi}的地盘位置`);
+        renqiDipan = dijiGong; // 如果找不到，使用默认的地机宫位作为地盘
+    }
+    
+    const renqiTianpan = renqiSelectedDizhi; // 选择的天盘值
     
     // 天气 = 天盘为用神 + 天盘为用神对应的地盘
     const tianqiTianpan = selectedYongShen;  // 用神本身作为天盘
@@ -3636,14 +3693,14 @@ function showSancengpan(tianpanMap) {
     // 计算人盗相关信息
     console.log("计算人盗...");
     // 获取最初下拉框选择的天盘
-    const tianpanSelect = document.getElementById('tianpan');
+    const renDaoTianpanSelect = document.getElementById('tianpan');
     let initialTianpan = "";
     
-    if (tianpanSelect && tianpanSelect.value && tianpanSelect.value !== "无") {
+    if (renDaoTianpanSelect && renDaoTianpanSelect.value && renDaoTianpanSelect.value !== "无") {
         // 使用下拉框选择的值
-        initialTianpan = tianpanSelect.value;
+        initialTianpan = renDaoTianpanSelect.value;
         console.log(`使用下拉框选择的天盘值: ${initialTianpan}`);
-    } else {
+                    } else {
         // 使用当前时间计算的天盘值
         const currentKe = getCurrentKe();
         initialTianpan = currentKe;
