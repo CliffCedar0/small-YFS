@@ -2596,53 +2596,27 @@ function showErcengpan(tianpanMap) {
     const renqiResult = calculateTuiziForYongShen(renqiTianpanStar, renqiDipanStarNumber);
     console.log(`人气推字结果: ${renqiResult}`);
 
-    // ----- 天气卡片（基于二层盘） -----
-    console.log("计算天气（基于二层盘）...");
-    // 天气 = 天盘为用神 + 天盘为用神对应的地盘
-    const tianqiTianpan = selectedYongShen;  // 用神本身作为天盘
+    // ----- 地气卡片（基于二层盘） -----
+    console.log("计算地气（基于二层盘）...");
+    // 地气 = 天盘为用神 + 天盘为用神对应的地盘
+    const diqiTianpan = selectedYongShen;  // 用神本身作为天盘
     
     // 找到二层盘中天盘为用神的地盘位置
-    let tianqiDipan = null;
+    let diqiDipan = null;
     for (const [dipan, tianpan] of Object.entries(ercengPanMap)) {
         if (tianpan === selectedYongShen) {
-            tianqiDipan = dipan;
+            diqiDipan = dipan;
             break;
         }
     }
     
     // 如果找不到天盘为用神的地盘位置
-    if (!tianqiDipan) {
+    if (!diqiDipan) {
         console.error(`在二层盘中未找到天盘为${selectedYongShen}的地盘位置`);
-        tianqiDipan = "未知";
+        diqiDipan = "未知";
     }
     
-    console.log(`天气（二层盘）: 天盘=${tianqiTianpan}, 地盘=${tianqiDipan}`);
-    
-    // 计算天气天盘星司
-    const tianqiTianpanPart = getBranchPartByTime(tianqiTianpan, hour, minute);
-    const tianqiTianpanKey = `${tianqiTianpan}-${tianqiTianpanPart}`;
-    const tianqiTianpanStar = xingsiNames[tianqiTianpanKey];
-    const tianqiTianpanStarNumber = xingsiNumberMap[tianqiTianpanStar] || 0;
-    console.log(`天气天盘星司: ${tianqiTianpanStar}(${tianqiTianpanStarNumber})`);
-    
-    // 计算天气地盘星司
-    const tianqiDipanPart = getBranchPartByTime(tianqiDipan, hour, minute);
-    const tianqiDipanKey = `${tianqiDipan}-${tianqiDipanPart}`;
-    const tianqiDipanStar = xingsiNames[tianqiDipanKey];
-    const tianqiDipanStarNumber = xingsiNumberMap[tianqiDipanStar] || 0;
-    console.log(`天气地盘星司: ${tianqiDipanStar}(${tianqiDipanStarNumber})`);
-    
-    // 计算天气推字结果
-    const tianqiResult = calculateTuiziForYongShen(tianqiTianpanStar, tianqiDipanStarNumber);
-    console.log(`天气推字结果: ${tianqiResult}`);
-
-    // ----- 地气卡片（基于二层盘） -----
-    console.log("计算地气（基于二层盘）...");
-    // 地气 = 地盘为用神对应的天盘 + 地盘为用神
-    const diqiTianpan = ercengPanMap[selectedYongShen]; // 二层盘中地盘为用神对应的天盘
-    const diqiDipan = selectedYongShen;                 // 用神本身作为地盘
-    
-    console.log(`地气（二层盘）: 天盘=${diqiTianpan}, 地盘=${diqiDipan}`);
+    console.log(`地气（基于二层盘）: 天盘=${diqiTianpan}, 地盘=${diqiDipan}`);
     
     // 计算地气天盘星司
     const diqiTianpanPart = getBranchPartByTime(diqiTianpan, hour, minute);
@@ -2661,6 +2635,32 @@ function showErcengpan(tianpanMap) {
     // 计算地气推字结果
     const diqiResult = calculateTuiziForYongShen(diqiTianpanStar, diqiDipanStarNumber);
     console.log(`地气推字结果: ${diqiResult}`);
+
+    // ----- 天气卡片（基于二层盘） -----
+    console.log("计算天气（基于二层盘）...");
+    // 天气 = 地盘为用神对应的天盘 + 地盘为用神
+    const tianqiTianpan = ercengPanMap[selectedYongShen]; // 二层盘中地盘为用神对应的天盘
+    const tianqiDipan = selectedYongShen;                 // 用神本身作为地盘
+    
+    console.log(`天气（基于二层盘）: 天盘=${tianqiTianpan}, 地盘=${tianqiDipan}`);
+    
+    // 计算天气天盘星司
+    const tianqiTianpanPart = getBranchPartByTime(tianqiTianpan, hour, minute);
+    const tianqiTianpanKey = `${tianqiTianpan}-${tianqiTianpanPart}`;
+    const tianqiTianpanStar = xingsiNames[tianqiTianpanKey];
+    const tianqiTianpanStarNumber = xingsiNumberMap[tianqiTianpanStar] || 0;
+    console.log(`天气天盘星司: ${tianqiTianpanStar}(${tianqiTianpanStarNumber})`);
+    
+    // 计算天气地盘星司
+    const tianqiDipanPart = getBranchPartByTime(tianqiDipan, hour, minute);
+    const tianqiDipanKey = `${tianqiDipan}-${tianqiDipanPart}`;
+    const tianqiDipanStar = xingsiNames[tianqiDipanKey];
+    const tianqiDipanStarNumber = xingsiNumberMap[tianqiDipanStar] || 0;
+    console.log(`天气地盘星司: ${tianqiDipanStar}(${tianqiDipanStarNumber})`);
+    
+    // 计算天气推字结果
+    const tianqiResult = calculateTuiziForYongShen(tianqiTianpanStar, tianqiDipanStarNumber);
+    console.log(`天气推字结果: ${tianqiResult}`);
     
     // 获取占卜类型（他占/自占）
     const taZhanRadio = document.getElementById("taZhan");
@@ -2694,7 +2694,7 @@ function showErcengpan(tianpanMap) {
                     <p>${tianqiTianpan}+${tianqiDipan}</p>
                     <p>${tianqiTianpanStar}+${tianqiDipanStar}</p>
                     <p><span class="badge bg-success">${tianqiResult}</span></p>
-                    <p class="small text-muted">天盘为用神+该天盘对应的地盘（基于二层盘）</p>
+                    <p class="small text-muted">用神地盘对应的天盘+用神地盘（基于二层盘）</p>
                 </div>
             </div>
         </div>
@@ -2708,7 +2708,7 @@ function showErcengpan(tianpanMap) {
                     <p>${diqiTianpan}+${diqiDipan}</p>
                     <p>${diqiTianpanStar}+${diqiDipanStar}</p>
                     <p><span class="badge bg-info">${diqiResult}</span></p>
-                    <p class="small text-muted">用神地盘对应的天盘+用神地盘（基于二层盘）</p>
+                    <p class="small text-muted">天盘为用神+该天盘对应的地盘（基于二层盘）</p>
                 </div>
             </div>
         </div>
@@ -3540,22 +3540,16 @@ function showSancengpan(tianpanMap) {
     
     const renqiTianpan = renqiSelectedDizhi; // 选择的天盘值
     
-    // 天气 = 天盘为用神 + 天盘为用神对应的地盘
-    const tianqiTianpan = selectedYongShen;  // 用神本身作为天盘
+    // 天气 = 地盘为用神 + 用神对应的天盘
+    // 用神作为地盘
+    const tianqiDipan = selectedYongShen;
     
-    // 找到二层盘中天盘为用神的地盘位置
-    let tianqiDipan = null;
-    for (const [dipan, tianpan] of Object.entries(ercengPanMap)) {
-        if (tianpan === selectedYongShen) {
-            tianqiDipan = dipan;
-            break;
-        }
-    }
+    // 找到地盘为用神对应的天盘值
+    const tianqiTianpan = ercengPanMap[selectedYongShen] || "无";
     
-    // 如果找不到天盘为用神的地盘位置
-    if (!tianqiDipan) {
-        console.error(`在二层盘中未找到天盘为${selectedYongShen}的地盘位置`);
-        tianqiDipan = "未知";
+    // 如果找不到用神地盘对应的天盘
+    if (tianqiTianpan === "无") {
+        console.error(`在二层盘中未找到地盘${selectedYongShen}对应的天盘`);
     }
     
     console.log(`二层盘人气：天盘=${renqiTianpan}, 地盘=${renqiDipan}`);
@@ -3746,66 +3740,66 @@ function showSancengpan(tianpanMap) {
     // 计算十贼
     console.log("计算十贼...");
     
-    // 以人盗为核心
-    const renDaoDipanIndex = getBranchIndex(renDaoDipan);
-    console.log(`人盗地盘索引: ${renDaoDipanIndex}`);
+    // 以天地盗为核心
+    const tiandiDaoDipanIndex = getBranchIndex(tiandiDaoDipan);
+    console.log(`天地盗地盘索引: ${tiandiDaoDipanIndex}`);
     
     // 计算天命贼：顺时针下一个宫位的地盘
-    const tianmingZeIndex = (renDaoDipanIndex + 1) % 12;
+    const tianmingZeIndex = (tiandiDaoDipanIndex + 1) % 12;
     const tianmingZeDipan = getBranchByIndex(tianmingZeIndex);
     const tianmingZeTianpan = sancengPanMap[tianmingZeDipan];
     console.log(`天命贼: 天盘=${tianmingZeTianpan}, 地盘=${tianmingZeDipan}`);
     
     // 计算天物贼：逆时针下两个宫位的地盘
-    const tianwuZeIndex = (renDaoDipanIndex - 2 + 12) % 12;
+    const tianwuZeIndex = (tiandiDaoDipanIndex - 2 + 12) % 12;
     const tianwuZeDipan = getBranchByIndex(tianwuZeIndex);
     const tianwuZeTianpan = sancengPanMap[tianwuZeDipan];
     console.log(`天物贼: 天盘=${tianwuZeTianpan}, 地盘=${tianwuZeDipan}`);
     
     // 计算天时贼：顺时针下三个宫位的地盘
-    const tianshiZeIndex = (renDaoDipanIndex + 3) % 12;
+    const tianshiZeIndex = (tiandiDaoDipanIndex + 3) % 12;
     const tianshiZeDipan = getBranchByIndex(tianshiZeIndex);
     const tianshiZeTianpan = sancengPanMap[tianshiZeDipan];
     console.log(`天时贼: 天盘=${tianshiZeTianpan}, 地盘=${tianshiZeDipan}`);
     
     // 计算天功贼：逆时针下四个宫位的地盘
-    const tiangongZeIndex = (renDaoDipanIndex - 4 + 12) % 12;
+    const tiangongZeIndex = (tiandiDaoDipanIndex - 4 + 12) % 12;
     const tiangongZeDipan = getBranchByIndex(tiangongZeIndex);
     const tiangongZeTianpan = sancengPanMap[tiangongZeDipan];
     console.log(`天功贼: 天盘=${tiangongZeTianpan}, 地盘=${tiangongZeDipan}`);
     
     // 计算天神贼：顺时针下五个宫位的地盘
-    const tianshenZeIndex = (renDaoDipanIndex + 5) % 12;
+    const tianshenZeIndex = (tiandiDaoDipanIndex + 5) % 12;
     const tianshenZeDipan = getBranchByIndex(tianshenZeIndex);
     const tianshenZeTianpan = sancengPanMap[tianshenZeDipan];
     console.log(`天神贼: 天盘=${tianshenZeTianpan}, 地盘=${tianshenZeDipan}`);
     
     // 计算地命贼：顺时针下六个宫位的天盘
-    const dimingZeIndex = (renDaoDipanIndex + 6) % 12;
+    const dimingZeIndex = (tiandiDaoDipanIndex + 6) % 12;
     const dimingZeDipan = getBranchByIndex(dimingZeIndex);
     const dimingZeTianpan = sancengPanMap[dimingZeDipan];
     console.log(`地命贼: 天盘=${dimingZeTianpan}, 地盘=${dimingZeDipan}`);
     
     // 计算地物贼：逆时针下七个宫位的天盘
-    const diwuZeIndex = (renDaoDipanIndex - 7 + 12) % 12;
+    const diwuZeIndex = (tiandiDaoDipanIndex - 7 + 12) % 12;
     const diwuZeDipan = getBranchByIndex(diwuZeIndex);
     const diwuZeTianpan = sancengPanMap[diwuZeDipan];
     console.log(`地物贼: 天盘=${diwuZeTianpan}, 地盘=${diwuZeDipan}`);
     
     // 计算地时贼：顺时针下八个宫位的天盘
-    const dishiZeIndex = (renDaoDipanIndex + 8) % 12;
+    const dishiZeIndex = (tiandiDaoDipanIndex + 8) % 12;
     const dishiZeDipan = getBranchByIndex(dishiZeIndex);
     const dishiZeTianpan = sancengPanMap[dishiZeDipan];
     console.log(`地时贼: 天盘=${dishiZeTianpan}, 地盘=${dishiZeDipan}`);
     
     // 计算地功贼：逆时针下九个宫位的天盘
-    const digongZeIndex = (renDaoDipanIndex - 9 + 12) % 12;
+    const digongZeIndex = (tiandiDaoDipanIndex - 9 + 12) % 12;
     const digongZeDipan = getBranchByIndex(digongZeIndex);
     const digongZeTianpan = sancengPanMap[digongZeDipan];
     console.log(`地功贼: 天盘=${digongZeTianpan}, 地盘=${digongZeDipan}`);
     
     // 计算地神贼：顺时针下十个宫位的天盘
-    const dishenZeIndex = (renDaoDipanIndex + 10) % 12;
+    const dishenZeIndex = (tiandiDaoDipanIndex + 10) % 12;
     const dishenZeDipan = getBranchByIndex(dishenZeIndex);
     const dishenZeTianpan = sancengPanMap[dishenZeDipan];
     console.log(`地神贼: 天盘=${dishenZeTianpan}, 地盘=${dishenZeDipan}`);
@@ -3893,7 +3887,7 @@ function showSancengpan(tianpanMap) {
         </div>
     </div>
     
-    <h5 class="mt-4">十贼（以人盗为核心）</h5>
+    <h5 class="mt-4">十贼（以天地盗为核心）</h5>
     
     <!-- 第一行五个贼 -->
     <div class="row mb-3">
