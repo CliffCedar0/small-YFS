@@ -2355,7 +2355,22 @@ function calculateYongShen() {
                     </div>
                 </div>
                 
+                <div class="row">
+                    <div class="col-md-12 mb-3 text-center">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                三层盘
+                            </div>
+                            <div class="card-body text-center">
+                                <button class="btn btn-outline-primary" id="sancengpan-btn">显示三层盘</button>
+                                <p class="small text-muted mt-2">点击按钮查看三层盘</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div id="ercengpan-container" class="mt-3" style="display: none;"></div>
+                <div id="sancengpan-container" class="mt-3" style="display: none;"></div>
                 
                 <div class="small text-muted mt-3">
                     <p>占卜类型: ${zhanType}</p>
@@ -2370,6 +2385,15 @@ function calculateYongShen() {
                     showErcengpan(tianpanMap);
                 });
                 console.log("二层盘按钮事件已绑定");
+            }
+            
+            // 添加三层盘按钮的点击事件
+            const sancengpanBtn = document.getElementById("sancengpan-btn");
+            if (sancengpanBtn) {
+                sancengpanBtn.addEventListener("click", function() {
+                    showSancengpan(tianpanMap);
+                });
+                console.log("三层盘按钮事件已绑定");
             }
         }
         
@@ -3549,3 +3573,213 @@ console.log("开始更新固定卡片信息...");
 updateFixedCards();  // 添加对updateFixedCards的调用
 
 // updateTuiziInfo();  // 移除自动调用updateTuiziInfo
+
+// 显示三层盘
+function showSancengpan(tianpanMap) {
+    console.log("显示三层盘...");
+    
+    // 获取容器元素
+    const container = document.getElementById("sancengpan-container");
+    if (!container) {
+        console.error("未找到三层盘容器元素");
+        return;
+    }
+    
+    // 切换显示状态
+    if (container.style.display === "none") {
+        container.style.display = "block";
+    } else {
+        container.style.display = "none";
+        return;
+    }
+    
+    // 获取用神选择
+    const yongshenSelect = document.getElementById("yongshen-select");
+    if (!yongshenSelect || !yongshenSelect.value) {
+        container.innerHTML = `<div class="alert alert-warning">请先选择用神</div>`;
+        return;
+    }
+    
+    const selectedYongShen = yongshenSelect.value;
+    console.log(`三层盘用神: ${selectedYongShen}`);
+    
+    // 定义地盘布局
+    const dipanLayout = [
+        ["巳", "午", "未", "申"],
+        ["辰", "空", "空", "酉"],
+        ["卯", "空", "空", "戌"],
+        ["寅", "丑", "子", "亥"]
+    ];
+    
+    // 先计算二层盘的相关信息
+    // 查找天机的天盘值和地机宫位
+    const tianjiTianpan = tianpanMap[selectedYongShen];
+    if (!tianjiTianpan || tianjiTianpan === "无") {
+        console.error("天机的天盘无效");
+        container.innerHTML = `<div class="alert alert-warning">天机的天盘无效</div>`;
+        return;
+    }
+    const tianpanDizhi = extractDizhi(tianjiTianpan);
+    
+    // 计算地机宫位
+    const dijiGong = getOppositeGong(selectedYongShen);
+    
+    console.log(`用神: ${selectedYongShen}, 天机的天盘: ${tianpanDizhi}, 地机宫位: ${dijiGong}`);
+    
+    // 创建天盘排列
+    const branches = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+    
+    // 找到天机天盘在branches中的索引
+    const tianpanDizhiIndex = branches.indexOf(tianpanDizhi);
+    if (tianpanDizhiIndex === -1) {
+        console.error(`天机天盘 ${tianpanDizhi} 不是有效的地支`);
+        container.innerHTML = `<div class="alert alert-warning">无法计算三层盘：天机天盘 ${tianpanDizhi} 不是有效的地支</div>`;
+        return;
+    }
+    
+    // 找到地机宫位在branches中的索引
+    const dijiGongIndex = branches.indexOf(dijiGong);
+    if (dijiGongIndex === -1) {
+        console.error(`地机宫位 ${dijiGong} 不是有效的地支`);
+        container.innerHTML = `<div class="alert alert-warning">无法计算三层盘：地机宫位 ${dijiGong} 不是有效的地支</div>`;
+        return;
+    }
+    
+    // 创建二层盘映射（地盘->天盘）
+    const ercengPanMap = {};
+    
+    // 首先，将天机的天盘放在地机的地盘位置上
+    ercengPanMap[dijiGong] = tianpanDizhi;
+    
+    // 然后从天盘地支开始，逆时针排列其余天盘
+    for (let i = 1; i < 12; i++) {
+        // 计算地支在地盘中的位置（逆时针+1）
+        const dipanIndex = (dijiGongIndex + i) % 12;
+        const dipanBranch = branches[dipanIndex];
+        
+        // 计算对应的天盘值（逆时针+1）
+        const tianpanIndex = (tianpanDizhiIndex + i) % 12;
+        const tianpanValue = branches[tianpanIndex];
+        
+        // 设置地盘到天盘的映射
+        ercengPanMap[dipanBranch] = tianpanValue;
+    }
+    
+    // 获取当前时间
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    
+    // 计算二层盘的人气和天气
+    // 人气 = 天机天盘 + 地机地盘（在二层盘中，天机天盘已经放在了地机地盘位置上）
+    const renqiTianpan = tianpanDizhi;  // 天机的天盘
+    const renqiDipan = dijiGong;        // 地机的地盘
+    
+    // 天气 = 天盘为用神 + 天盘为用神对应的地盘
+    const tianqiTianpan = selectedYongShen;  // 用神本身作为天盘
+    
+    // 找到二层盘中天盘为用神的地盘位置
+    let tianqiDipan = null;
+    for (const [dipan, tianpan] of Object.entries(ercengPanMap)) {
+        if (tianpan === selectedYongShen) {
+            tianqiDipan = dipan;
+            break;
+        }
+    }
+    
+    // 如果找不到天盘为用神的地盘位置
+    if (!tianqiDipan) {
+        console.error(`在二层盘中未找到天盘为${selectedYongShen}的地盘位置`);
+        tianqiDipan = "未知";
+    }
+    
+    console.log(`二层盘人气：天盘=${renqiTianpan}, 地盘=${renqiDipan}`);
+    console.log(`二层盘天气：天盘=${tianqiTianpan}, 地盘=${tianqiDipan}`);
+    
+    // 创建三层盘映射（地盘->天盘）
+    // 三层盘的天盘：第二层盘的天气的天盘(tianqiTianpan)加在第二层盘的人气的地盘(renqiDipan)上
+    const sancengPanMap = {};
+    
+    // 首先，将天气的天盘放在人气的地盘位置上
+    sancengPanMap[renqiDipan] = tianqiTianpan;
+    console.log(`三层盘：将二层盘天气的天盘${tianqiTianpan}放在二层盘人气的地盘${renqiDipan}位置上`);
+    
+    // 天气天盘位置索引
+    const tianqiTianpanIndex = branches.indexOf(tianqiTianpan);
+    // 人气地盘位置索引
+    const renqiDipanIndex = branches.indexOf(renqiDipan);
+    
+    // 然后从天气天盘开始，按照小阴符术规则逆时针排列其余天盘
+    for (let i = 1; i < 12; i++) {
+        // 计算地支在地盘中的位置（逆时针+1）
+        const dipanIndex = (renqiDipanIndex + i) % 12;
+        const dipanBranch = branches[dipanIndex];
+        
+        // 计算对应的天盘值（逆时针+1）
+        const tianpanIndex = (tianqiTianpanIndex + i) % 12;
+        const tianpanValue = branches[tianpanIndex];
+        
+        // 设置地盘到天盘的映射
+        sancengPanMap[dipanBranch] = tianpanValue;
+        console.log(`三层盘：地盘 ${dipanBranch} -> 天盘 ${tianpanValue}`);
+    }
+    
+    // 创建三层盘表格
+    let tableHtml = `
+    <div class="mb-3 alert alert-info">
+        三层盘：二层盘天气的天盘${tianqiTianpan}放在二层盘人气的地盘${renqiDipan}位置上，然后<strong>逆时针</strong>排列
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered text-center sancengpan-table">
+    `;
+    
+    for (let row = 0; row < 4; row++) {
+        tableHtml += '<tr>';
+        
+        for (let col = 0; col < 4; col++) {
+            const dizhiValue = dipanLayout[row][col];
+            
+            if (dizhiValue === "空") {
+                if (row === 1 && col === 1) {
+                    tableHtml += '<td colspan="2" rowspan="2" class="center-cell bg-light">';
+                    tableHtml += '<div class="center-text">三层盘</div>';
+                    tableHtml += '</td>';
+                }
+            } else {
+                // 获取这个地支对应的天盘值
+                const tianpanValue = sancengPanMap[dizhiValue] || "无";
+                
+                // 突出显示天气的天盘放在人气地盘的位置
+                let specialClass = "";
+                if (dizhiValue === renqiDipan && tianpanValue === tianqiTianpan) {
+                    specialClass = "bg-primary text-white"; // 天气天盘放在人气地盘的位置
+                }
+                
+                tableHtml += `<td class="position-relative ${specialClass}">`;
+                tableHtml += `<div class="tp-label">${tianpanValue}</div>`;
+                tableHtml += `<div class="dz-label">${dizhiValue}</div>`;
+                tableHtml += '</td>';
+            }
+        }
+        
+        tableHtml += '</tr>';
+    }
+    
+    tableHtml += '</table></div>';
+    tableHtml += '<div class="small text-muted mt-2">注：蓝色背景表示二层盘天气的天盘放在二层盘人气的地盘位置上，天盘按<strong>逆时针</strong>方向排列</div>';
+    
+    // 获取占卜类型（他占/自占）
+    const taZhanRadio = document.getElementById("taZhan");
+    const isForOthers = taZhanRadio && taZhanRadio.checked;
+    const zhanType = isForOthers ? "他占" : "自占";
+    
+    tableHtml += `
+    <div class="small text-muted mt-3">
+        <p>占卜类型: ${zhanType}</p>
+        <p>计算时间: ${hour}:${minute.toString().padStart(2, '0')}</p>
+    </div>
+    `;
+    
+    container.innerHTML = tableHtml;
+    console.log("三层盘显示完成");
+}
